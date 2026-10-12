@@ -5,11 +5,13 @@
 import Adw from 'gi://Adw';
 import Gdk from 'gi://Gdk';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk';
 
 import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-import {catalog} from './lib/catalog.js';
+import {fromBackup, toBackup} from './lib/backup.js';
+import {catalog, typeSizes} from './lib/catalog.js';
 import * as Layout from './lib/layout.js';
 import {newSession, searchPlaces} from './lib/sources/weather.js';
 import {Store} from './lib/store.js';
@@ -255,6 +257,67 @@ function photoGroup(store, window) {
     return {group, refresh};
 }
 
+// Saves the arrangement to a file and brings one back, to carry it to
+// another machine.
+function backupGroup(store, window) {
+    const group = new Adw.PreferencesGroup({
+        title: 'Arrangement',
+        description: 'The widgets with their places and settings, the look and the place of the weather, as one file.',
+    });
+    const toast = title => window.add_toast(new Adw.Toast({title}));
+    const filter = new Gtk.FileFilter({name: 'Ledge arrangement'});
+    filter.add_pattern('*.json');
+    const filters = new Gio.ListStore({item_type: Gtk.FileFilter});
+    filters.append(filter);
+
+    const save = new Adw.ButtonRow({title: 'Save to a file…', start_icon_name: 'document-save-symbolic'});
+    save.connect('activated', () => {
+        new Gtk.FileDialog({title: 'Save the arrangement', initial_name: 'ledge.json', filters}).save(window, null, (dialog, result) => {
+            let file;
+            try {
+                file = dialog.save_finish(result);
+            } catch {
+                // Closed without choosing.
+                return;
+            }
+            const text = toBackup({
+                widgets: store.widgets, style: store.style, expressive: store.expressive, translucent: store.translucent,
+                animations: store.animations, screens: store.screens, place: store.place,
+            });
+            try {
+                file.replace_contents(new TextEncoder().encode(text), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null);
+                toast(`Saved to ${GLib.path_get_basename(file.get_path())}`);
+            } catch (e) {
+                toast(`Could not be saved: ${e.message}`);
+            }
+        });
+    });
+    const load = new Adw.ButtonRow({title: 'Load from a file…', start_icon_name: 'document-open-symbolic'});
+    load.connect('activated', () => {
+        new Gtk.FileDialog({title: 'Load an arrangement', filters}).open(window, null, (dialog, result) => {
+            let settings = null;
+            try {
+                const [, contents] = dialog.open_finish(result).load_contents(null);
+                settings = fromBackup(new TextDecoder().decode(contents), typeSizes, styles);
+            } catch (e) {
+                if (e.matches?.(Gtk.DialogError, Gtk.DialogError.DISMISSED))
+                    return;
+            }
+            if (!settings) {
+                toast('This file is not a Ledge arrangement');
+                return;
+            }
+            // Each value has a setter of its name on the store.
+            for (const [key, value] of Object.entries(settings))
+                store[key] = value;
+            toast(`Loaded ${settings.widgets.length} widgets`);
+        });
+    });
+    group.add(save);
+    group.add(load);
+    return {group};
+}
+
 export default class LedgePreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
         const store = new Store(this.getSettings());
@@ -269,6 +332,7 @@ export default class LedgePreferences extends ExtensionPreferences {
         general.add(behaviour.group);
         general.add(weather.group);
         general.add(photo.group);
+        general.add(backupGroup(store, window).group);
         window.add(widgets.page);
         window.add(general);
 
