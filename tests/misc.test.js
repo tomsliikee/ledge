@@ -1,6 +1,8 @@
 import {test, equal, done} from './harness.js';
 import * as Calendar from '../extension/lib/calendar.js';
 import {shownWidgets} from '../extension/lib/visibility.js';
+import * as Pomodoro from '../extension/lib/pomodoro.js';
+import * as Tasks from '../extension/lib/tasks.js';
 import * as Timer from '../extension/lib/timer.js';
 
 test('october 2026 starts on a thursday and has five weeks', () => {
@@ -59,6 +61,53 @@ test('a widget set to hide on battery steps aside only there', () => {
     ];
     equal(shownWidgets(widgets, {onBattery: false}).map(w => w.id), ['a', 'b']);
     equal(shownWidgets(widgets, {onBattery: true}).map(w => w.id), ['a']);
+});
+
+const MIN = 60_000;
+const config = {work: 25 * MIN, rest: 5 * MIN, long: 15 * MIN, rounds: 2};
+
+test('work is followed by a break, and the last of a set by the long one', () => {
+    const first = Pomodoro.create(config);
+    const rest = Pomodoro.following(first, config);
+    equal([rest.phase, rest.round, rest.timer.duration], ['rest', 1, 5 * MIN]);
+    const second = Pomodoro.following(rest, config);
+    equal([second.phase, second.round], ['work', 2]);
+    const long = Pomodoro.following(second, config);
+    equal([long.phase, long.timer.duration], ['long', 15 * MIN]);
+    equal(Pomodoro.following(long, config).round, 1);
+});
+
+test('a phase that ended starts the next at that moment', () => {
+    const running = Pomodoro.start(Pomodoro.create(config), 0);
+    equal(Pomodoro.settle(running, 24 * MIN, config).ended, 0);
+    const {state, ended} = Pomodoro.settle(running, 27 * MIN, config);
+    equal([ended, state.phase, Timer.shown(state.timer, 27 * MIN)], [1, 'rest', 3 * MIN]);
+});
+
+test('an hour unwatched passes through several phases', () => {
+    const {state, ended} = Pomodoro.settle(Pomodoro.start(Pomodoro.create(config), 0), 62 * MIN, config);
+    // 25 work, 5 rest, 25 work, then seven minutes into the long break.
+    equal([ended, state.phase, state.round, Timer.shown(state.timer, 62 * MIN)], [3, 'long', 2, 8 * MIN]);
+});
+
+test('a paused phase never ends', () => {
+    const paused = Pomodoro.pause(Pomodoro.start(Pomodoro.create(config), 0), 10 * MIN);
+    equal(Pomodoro.settle(paused, 500 * MIN, config), {state: paused, ended: 0});
+});
+
+test('tasks are added trimmed, ticked off and cleared', () => {
+    let items = Tasks.add(Tasks.add([], '  Bread '), 'Coffee');
+    equal(Tasks.add(items, '   '), items);
+    items = Tasks.toggle(items, 0);
+    equal(items, [{text: 'Bread', done: true}, {text: 'Coffee', done: false}]);
+    equal(Tasks.ordered(items).map(item => [item.text, item.index]), [['Coffee', 1], ['Bread', 0]]);
+    equal(Tasks.openCount(items), 1);
+    equal(Tasks.clearDone(items), [{text: 'Coffee', done: false}]);
+});
+
+test('a damaged list of tasks is read as far as it makes sense', () => {
+    equal(Tasks.parse('x'), []);
+    equal(Tasks.parse([{text: 'A'}, null, {text: ''}, {done: true}]), [{text: 'A', done: false}]);
 });
 
 done('misc');

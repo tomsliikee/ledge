@@ -1,6 +1,6 @@
 <div align="center">
   <h1>Ledge</h1>
-  <p><strong>Desktop widgets for GNOME Shell in the manner of macOS: a clock, the load of the machine, the weather and seventeen more, placed freely on the desktop and shown over the windows from the top bar.</strong></p>
+  <p><strong>Desktop widgets for GNOME Shell in the manner of macOS: a clock, the load of the machine, the weather and nineteen more, placed freely on the desktop and shown over the windows from the top bar.</strong></p>
 
   <p>
     <img src="https://img.shields.io/badge/Platform-GNOME%20Shell%2050-neutral?style=flat-square" alt="Platform" />
@@ -30,15 +30,19 @@ The values in the screenshots are those of the laptop they were taken on; the we
 
 ## Features
 
-- **Twenty Widgets:** Time, load, weather, media and small tools; the full list is below.
+- **Twenty-Two Widgets:** Time, load, weather, media and small tools; the full list is below.
 - **Three Sizes:** **Small** (160 px square), **medium** (twice as wide) and **large** (twice as wide and high). Each size has a layout of its own.
 - **Free Placement:** Drag a widget anywhere. On release it rests on an **8 px grid**, or flush with a neighbour when one of its edges is near.
 - **Look and Hold:** Rest the pointer on the top bar icon and the widgets appear over the windows for as long as it stays. A click holds them there and makes them usable.
+- **Stacks:** Several widgets on one place. The wheel or the dots down the edge turn the stack; only the widget on top runs.
+- **A Shortcut:** **Super+W** holds the widgets over the windows and lets them go again. Another combination can be recorded.
+- **A Click Opens the App:** The weather opens Weather, the calendar Calendar, a load the system monitor. One switch turns it off.
 - **Arranging Mode:** A panel in the same design switches widgets on and off, sets up the one you clicked, and chooses colour, see-through and motion.
 - **Several Screens:** Each screen has **its own** widgets, or all widgets are **mirrored** on every screen, or they show on the **main screen only**.
 - **Two Looks:** **Expressive**, with tiles in the tones of the colour scheme and values on shapes that grow with them, or **calm**, with neutral tiles and colour only in rings and lines. One switch changes all widgets.
 - **Five Colour Styles:** **Blue**, **violet**, **green**, **orange** and **pink**, each in light and dark, following the system's colour scheme.
 - **Motion With a Switch:** A second hand, rings that glide to a new value, widgets that rise when they appear. One switch turns all of it off.
+- **Carried Along:** The arrangement, the look and the place of the weather are saved to one file and loaded on another machine.
 - **Quiet When Unseen:** Readings stop behind maximised windows, in the overview and after **20 minutes** without input; on battery every interval doubles.
 
 ![The same desktop in the light colour scheme](readmestuff/light.png)
@@ -66,13 +70,15 @@ The values in the screenshots are those of the laptop they were taken on; the we
 | **Tally** | S M | Session and week limits of a Claude plan | The cache of the [**Tally**](https://github.com/tomsliikee/tally) extension |
 | **World clock** | S M L | The time in up to six cities and how far ahead they are | System time zones |
 | **Timer** | S M | A countdown that notifies at its end, or a stopwatch | — |
+| **Pomodoro** | S M | Focus and breaks in turn: four rounds, then a long break | — |
 | **Countdown** | S M | The days until a date of your choice | — |
 | **Note** | S M L | A few lines of your own | — |
+| **Tasks** | M L | A list to tick off | — |
 | **Photo** | S M L | A picture from a folder, a different one every hour | The folder; read only |
 
-- **More Than One:** Clock, timer, countdown, note and photo can be added several times, each with its own settings.
+- **More Than One:** Clock, timer, pomodoro, countdown, note, tasks and photo can be added several times, each with its own settings.
 - **GPU, Honestly:** **NVIDIA** cards report their load through `nvidia-smi`, **AMD** cards through `gpu_busy_percent`. **Intel** graphics report no load without extra rights, so the widget shows where the clock frequency stands between its lowest and highest, and labels it **GPU clock**.
-- **A Note Is Written While Held:** Text can only be typed while the widgets are held over the windows; on the bare desktop the keyboard belongs to the focused window.
+- **Notes and Tasks Are Written While Held:** Text can only be typed while the widgets are held over the windows; on the bare desktop the keyboard belongs to the focused window.
 
 ---
 
@@ -86,6 +92,12 @@ The values in the screenshots are those of the laptop they were taken on; the we
 | **Click** | The widgets are held and can be used and dragged; a click into the open or **Esc** lets go |
 | **Secondary click** | A menu with **Edit widgets** and **Settings** |
 
+| Elsewhere | Result |
+| :--- | :--- |
+| **Super+W** | The same as a click on the icon: held, and let go when pressed again |
+| **Click on a widget** | Opens the app that belongs to it and lets the widgets go. Notes, tasks, timers and photos open nothing |
+| **Wheel over a stack** | Turns it to the next or the previous widget |
+
 ---
 
 ## Arranging
@@ -94,9 +106,11 @@ The values in the screenshots are those of the laptop they were taken on; the we
 
 - **All Widgets:** One switch per widget. A widget that is switched off keeps its place, size and settings.
 - **The Selected One:** Click a widget to choose its **size** and what is particular to it: the clock's face, a countdown's date, the cities of a world clock, a photo's folder.
+- **Stacks:** Drag a widget onto the middle of another whose size it offers and it is laid on top. The panel lists the widgets of the selected stack and takes one out again.
+- **On Battery:** On a machine with a battery, each widget can be set to step aside while it is unplugged.
 - **Look:** One of five colours, the **expressive** or the calm look, **see-through** tiles that let the wallpaper show, and the switch for **motion**.
 - **Screens:** With more than one screen, the choice between **own**, **mirrored** and **main only**. With own layouts, a widget dragged to another screen belongs to it; when that screen is unplugged the widget shows on the main one and returns later.
-- **Also as a Window:** The same settings are in the extension's ordinary **settings window**; both write to the same place.
+- **Also as a Window:** The same settings are in the extension's ordinary **settings window**; both write to the same place. The shortcut is recorded there, and the arrangement is saved to a file and loaded from one.
 
 ---
 
@@ -186,7 +200,7 @@ node tools/build-tokens.js
 
 ## How It Works
 
-Three layers: **sources** that read, **pure logic** that runs outside the shell and is covered by **69** unit tests, and **views** drawn with **St** and **Cairo**.
+Three layers: **sources** that read, **pure logic** that runs outside the shell and is covered by **89** unit tests, and **views** drawn with **St** and **Cairo**.
 
 ```mermaid
 flowchart TD
@@ -216,8 +230,8 @@ flowchart TD
 
     subgraph Logic ["Pure Logic"]
         Parse["parse.js, weather.js, claude.js<br/><b>Readings to Numbers</b>"]
-        Layout["layout.js, snap.js, visibility.js<br/><b>Places, Snapping, Covered Screens</b>"]
-        Format["format.js, calendar.js, zones.js, timer.js<br/><b>Units, Dates, Time Zones</b>"]
+        Layout["layout.js, snap.js, stack.js, visibility.js<br/><b>Places, Snapping, Stacks, What Shows</b>"]
+        Format["format.js, calendar.js, zones.js, timer.js, pomodoro.js, tasks.js<br/><b>Units, Dates, Time Zones, Rounds, Lists</b>"]
         Catalog["catalog.js<br/><b>The Widgets and Their Sizes</b>"]
     end
 
@@ -248,7 +262,7 @@ flowchart TD
 
 | Path | Purpose |
 | :--- | :--- |
-| **dconf, `/org/gnome/shell/extensions/ledge/`** | The widgets with their places, sizes and settings; colour, see-through, motion, screens and the place for the weather |
+| **dconf, `/org/gnome/shell/extensions/ledge/`** | The widgets with their places, sizes, stacks and settings; colour, look, see-through, motion, screens, the shortcut and the place for the weather |
 | **`~/.cache/ledge/thumbs/`** | Photos and covers cut to the size of their widget |
 | **`~/.cache/tally/`** | Tally's records of the Claude limits. Read only |
 
@@ -263,8 +277,8 @@ flowchart TD
 
 | Part | State | How |
 | :--- | :--- | :--- |
-| **Parsing, formatting, layout, snapping, time zones, timer** | *tested* | 69 unit tests |
-| **All twenty widgets, every size, light and dark, both looks** | *tested* | Rendered in a headless GNOME Shell 50.5 with this laptop's real readings. The warning and error colours on shapes were not seen: no reading was that high |
+| **Parsing, formatting, layout, snapping, stacks, time zones, timer, pomodoro, tasks, backup** | *tested* | 89 unit tests |
+| **All twenty-two widgets, every size, light and dark, both looks** | *tested* | Rendered in a headless GNOME Shell 50.5 with this laptop's real readings. The warning and error colours on shapes were not seen: no reading was that high |
 | **Weather** | *tested* | A real forecast for Vienna from Open-Meteo on 2026-10-12. The place search was not run from the panel |
 | **Dragging and snapping** | *tested* | With a virtual pointer in the headless shell; the stored place lay on the grid |
 | **Look on hover, hold on click, menu on secondary click** | *tested* | With a virtual pointer, over a maximised window |
@@ -272,6 +286,12 @@ flowchart TD
 | **Arranging mode** | *tested* | Opened, a widget selected by a click, widgets added, colour and see-through changed. Text fields were not typed in |
 | **Settings window** | *tested* | Opened in the headless shell; a switch clicked there added the widget on the desktop |
 | **Several screens** | *tested* | Two virtual monitors: a drag to the other one, a widget of a missing monitor, mirrored and main only. Unplugging a real monitor was not tried |
+| **Stacks** | *tested* | With a virtual pointer: two widgets stacked by a drag, a third added, one of another size refused, turned with the wheel and a dot, moved as one, taken out |
+| **Shortcut** | *tested* | Super+W from a virtual keyboard held the widgets and let them go; with none set nothing happened. Recording another combination in the settings window was not tried |
+| **Click opens the app** | *tested* | A click on the held calendar started GNOME Calendar; not while arranging, not with the switch off |
+| **Tasks and Pomodoro** | *tested* | A task ticked off with the pointer and one added through the field; a round started by its button. A phase running to its end was only tested as logic |
+| **Stepping aside on battery** | *tested* | With the battery stood in for: the widget left, its source stopped, and both returned |
+| **Saving and loading the arrangement** | *built* | The file's content is unit tested; the two dialogs were not clicked |
 | **Switching off and on** | *tested* | Disabled and enabled in the running shell without an error |
 | **GPU on NVIDIA and AMD** | *built* | Only the parser of the `nvidia-smi` line is tested; no such card was at hand |
 | **Now playing** | *built* | Rendered with nothing playing; no player was run |

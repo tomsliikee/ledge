@@ -68,6 +68,12 @@
     box-shadow: none;
 }
 
+/* A task is pressed as a whole line. */
+.lg-task {
+    padding: 2px 0;
+    border-radius: 8px;
+}
+
 .lg-ghost {
     border-radius: 28px;
 }

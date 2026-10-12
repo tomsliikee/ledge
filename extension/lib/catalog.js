@@ -43,6 +43,10 @@ export const catalog = {
         {defaults: {by: 'cpu'}, opens: MONITOR}),
     countdown: entry('Countdown', 'The days until a date of your choice.', COMPACT,
         {defaults: {title: '', date: ''}, multiple: true, tone: 'primary'}),
+    tasks: entry('Tasks', 'A list to tick off. Write a task while the widgets are held over the windows.', WIDE,
+        {defaults: {items: []}, multiple: true, tone: 'tertiary'}),
+    pomodoro: entry('Pomodoro', 'Work and breaks in turn: four rounds, then a long break.', COMPACT,
+        {defaults: {work: 25, rest: 5}, multiple: true, tone: 'primary'}),
     photo: entry('Photo', 'A picture from a folder, a different one every hour.', ALL,
         {defaults: {folder: ''}, bare: true, multiple: true}),
 };

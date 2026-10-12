@@ -272,6 +272,10 @@ export class EditMode {
             if (options.mode === 'timer')
                 rows.push(choice('Minutes', 'minutes', [5, 15, 25, 45].map(m => [m, String(m)])));
         }
+        if (widget.type === 'pomodoro') {
+            rows.push(choice('Focus', 'work', [15, 25, 45, 50].map(m => [m, String(m)])));
+            rows.push(choice('Break', 'rest', [5, 10, 15].map(m => [m, String(m)])));
+        }
         if (widget.type === 'countdown') {
             rows.push(item('Title', null, entry(options.title, 'Holiday', title => this._setOption(widget.id, {title}))));
             rows.push(item('Date', parseDate(options.date) ? null : 'As year-month-day, like 2026-12-24.',

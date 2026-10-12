@@ -5,9 +5,10 @@ import GLib from 'gi://GLib';
 
 import {MONTHS, parseDate} from '../../lib/calendar.js';
 import * as Format from '../../lib/format.js';
+import * as Pomodoro from '../../lib/pomodoro.js';
 import * as Timer from '../../lib/timer.js';
 import {describeOffset, zoneTime} from '../../lib/zones.js';
-import {CENTER, START, badge, column, hint, iconButton, row, spacer} from '../parts.js';
+import {CENTER, START, badge, column, gauge, hint, iconButton, row, spacer} from '../parts.js';
 import {text} from '../text.js';
 import {WavyProgress} from '../wavy.js';
 
@@ -161,6 +162,118 @@ function buildTimer(ctx) {
 }
 
 export const timer = buildTimer;
+
+// Like the timers: kept outside the widget, followed by every view of it.
+const pomodoros = new Map();
+const pomodoroViews = new Map();
+const LONG_BREAK_MIN = 15;
+const ROUNDS = 4;
+const PHASES = {work: 'Focus', rest: 'Break', long: 'Long break'};
+
+function buildPomodoro(ctx) {
+    const config = {
+        work: ctx.options.work * MINUTE, rest: ctx.options.rest * MINUTE, long: LONG_BREAK_MIN * MINUTE, rounds: ROUNDS,
+    };
+    let state = pomodoros.get(ctx.id);
+    // Not begun, or set to other lengths since: from the start.
+    if (!state || (!Timer.isRunning(state.timer) && state.timer.elapsed === 0 && state.phase === 'work' && state.round === 1))
+        state = Pomodoro.create(config);
+
+    const small = ctx.size === 'small';
+    const face = small ? 72 : 104;
+    // The time stands on a shape that grows more pronounced as the phase
+    // passes; in the calm look, in a ring that fills.
+    const mark = ctx.expressive
+        ? badge({size: face, theme: ctx.theme, role: small ? 'title' : 'metric-s', accent: ctx.accent, mood: 'soft'})
+        : gauge({size: face, stroke: 8, theme: ctx.theme, role: small ? 'title' : 'metric-s', accent: ctx.accent});
+    const phase = text(small ? 'label' : 'title', {tone: small ? 'muted' : null});
+    const round = text('label', {tone: 'muted'});
+    const toggle = iconButton('media-playback-start-symbolic', () => press(), {kind: 'loud', label: 'Start or pause'});
+    const reset = iconButton('view-refresh-symbolic', () => save(Pomodoro.create(config)), {kind: 'quiet', label: 'Start over'});
+
+    let stopTicking = null;
+    let alarm = 0;
+    const views = pomodoroViews.get(ctx.id) ?? new Set();
+    pomodoroViews.set(ctx.id, views);
+    const announces = views.size === 0;
+
+    const show = () => {
+        const now = Date.now();
+        const settled = Pomodoro.settle(state, now, config);
+        if (settled.ended > 0)
+            state = settled.state;
+        const {timer} = state;
+        const done = Timer.progress(timer, now);
+        mark.label.text = Format.stopwatch(Timer.shown(timer, now) + 999);
+        if (ctx.expressive)
+            mark.show(Math.min(0.99, done), 'primary');
+        else
+            mark.ring.set(100 * done, 'primary');
+        phase.text = PHASES[state.phase];
+        round.text = `Round ${state.round} of ${ROUNDS}`;
+        toggle.child.icon_name = Timer.isRunning(timer) ? 'media-playback-pause-symbolic' : 'media-playback-start-symbolic';
+    };
+
+    const sync = () => {
+        const running = Timer.isRunning(state.timer);
+        if (running && !stopTicking)
+            stopTicking = ctx.watch('second', show);
+        if (!running && stopTicking) {
+            stopTicking();
+            stopTicking = null;
+        }
+        if (alarm)
+            GLib.source_remove(alarm);
+        alarm = 0;
+        // The end of a phase is announced even while the widget is covered.
+        if (running && announces) {
+            alarm = GLib.timeout_add(GLib.PRIORITY_DEFAULT, Math.max(0, Pomodoro.endsAt(state) - Date.now()), () => {
+                alarm = 0;
+                const ended = state.phase;
+                save(Pomodoro.settle(state, Date.now(), config).state);
+                ctx.notify(ended === 'work' ? 'Focus is over' : 'The break is over',
+                    `${PHASES[state.phase]}: ${Format.duration(state.timer.duration)}.`);
+                return GLib.SOURCE_REMOVE;
+            });
+        }
+        show();
+    };
+
+    function save(next) {
+        pomodoros.set(ctx.id, next);
+        for (const follow of views)
+            follow(next);
+    }
+
+    function press() {
+        const now = Date.now();
+        save(Timer.isRunning(state.timer) ? Pomodoro.pause(state, now) : Pomodoro.start(state, now));
+    }
+
+    const buttons = row({gap: 'lg-row-tight', x: small ? CENTER : START, children: [toggle, reset]});
+    buttons.x_expand = false;
+    const actor = small
+        ? column({gap: 'lg-stack', y: CENTER, children: [mark.actor, buttons]})
+        : row({gap: 'lg-row-wide', children: [mark.actor, column({gap: 'lg-column', y: CENTER, children: [
+            column({gap: 'lg-stack', children: [phase, round]}), buttons,
+        ]})]});
+    const follow = next => {
+        state = next;
+        sync();
+    };
+    views.add(follow);
+    sync();
+    return {
+        actor,
+        destroy: () => {
+            views.delete(follow);
+            if (alarm)
+                GLib.source_remove(alarm);
+        },
+    };
+}
+
+export const pomodoro = buildPomodoro;
 
 const FAR_DAYS = 30;
 
