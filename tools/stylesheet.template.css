@@ -1,0 +1,411 @@
+.lg-tile {
+    padding: $space-4;
+    border-radius: $radius-extra-large;
+}
+
+/* A photo fills its tile to the edge. */
+.lg-tile-bare {
+    padding: 0;
+}
+
+.lg-stack {
+    spacing: $space-1;
+}
+
+.lg-row {
+    spacing: $space-3;
+}
+
+.lg-row-tight {
+    spacing: $space-2;
+}
+
+.lg-row-wide {
+    spacing: $space-5;
+}
+
+.lg-column {
+    spacing: $space-2;
+}
+
+.lg-column-wide {
+    spacing: $space-3;
+}
+
+.lg-card {
+    padding: $space-3;
+    border-radius: $radius-large;
+}
+
+.lg-button {
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-large-increased;
+}
+
+.lg-button-small {
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-large;
+}
+
+.lg-cover {
+    border-radius: $radius-large;
+    background-size: cover;
+}
+
+.lg-photo {
+    border-radius: $radius-extra-large;
+    background-size: cover;
+}
+
+.lg-note {
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    box-shadow: none;
+}
+
+.lg-ghost {
+    border-radius: $radius-extra-large;
+}
+
+.lg-panel {
+    width: 360px;
+    padding: $space-4;
+    border-radius: $radius-extra-large;
+}
+
+.lg-panel-content {
+    spacing: $space-3;
+}
+
+.lg-section {
+    padding: $space-3 $space-1 0 $space-1;
+}
+
+.lg-group {
+    spacing: $space-1;
+}
+
+.lg-item {
+    padding: $space-3 $space-4;
+    spacing: $space-3;
+    border-radius: $radius-small;
+}
+
+.lg-item-first {
+    border-radius: $radius-tile $radius-tile $radius-small $radius-small;
+}
+
+.lg-item-last {
+    border-radius: $radius-small $radius-small $radius-tile $radius-tile;
+}
+
+.lg-item-only {
+    border-radius: $radius-tile;
+}
+
+.lg-entry {
+    padding: $space-2 $space-3;
+    border-radius: $radius-medium;
+    border: none;
+    box-shadow: none;
+}
+
+.lg-segments {
+    spacing: 2px;
+}
+
+/* Fully round means half the 36px height here; St draws 9999px badly. */
+.lg-segment {
+    height: 36px;
+    padding: 0 $space-3;
+    border-radius: $radius-small;
+}
+
+.lg-segment-first {
+    border-radius: 18px $radius-small $radius-small 18px;
+}
+
+.lg-segment-last {
+    border-radius: $radius-small 18px 18px $radius-small;
+}
+
+.lg-segment-selected {
+    border-radius: 18px;
+}
+
+.lg-swatches {
+    spacing: $space-3;
+}
+
+.lg-swatch {
+    border-radius: $radius-large;
+}
+
+.lg-pill {
+    height: 40px;
+    padding: 0 $space-5;
+    border-radius: $radius-large-increased;
+}
+
+.lg-indicator-icon {
+    icon-size: 16px;
+}
+
+/* The design tokens carry no scrim role; this is Material's, black at 32 %,
+   a little stronger because windows stay readable beneath it. */
+.lg-scrim {
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+/* The main action of an expressive widget is a pill, not a disc. */
+.lg-expressive .lg-button.lg-button-loud {
+    width: 72px;
+}
+
+/* themed */
+
+.lg-root .lg-tile {
+    background-color: $surface-container;
+    color: $on-surface;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.16);
+}
+
+.lg-root.lg-translucent .lg-tile {
+    background-color: $surface-container@78;
+}
+
+.lg-root .lg-tile-loud {
+    background-color: $primary-container;
+    color: $on-primary-container;
+}
+
+.lg-root .lg-muted {
+    color: $on-surface-variant;
+}
+
+.lg-root .lg-tile-loud .lg-muted {
+    color: $on-primary-container;
+}
+
+.lg-root .lg-accent {
+    color: $primary;
+}
+
+.lg-root .lg-warn {
+    color: $status-warn;
+}
+
+.lg-root .lg-bad {
+    color: $status-bad;
+}
+
+.lg-root .lg-card {
+    background-color: $surface-bright;
+}
+
+.lg-root .lg-button,
+.lg-root .lg-button-small {
+    background-color: $primary-container;
+    color: $on-primary-container;
+}
+
+.lg-root .lg-button:hover,
+.lg-root .lg-button-small:hover {
+    background-color: $inverse-primary;
+}
+
+.lg-root .lg-button-loud {
+    background-color: $primary;
+    color: $on-primary;
+}
+
+.lg-root .lg-button-loud:hover {
+    background-color: $primary;
+}
+
+.lg-root .lg-button-quiet {
+    background-color: transparent;
+    color: $on-surface-variant;
+}
+
+.lg-root .lg-button-quiet:hover {
+    background-color: $surface-container-highest;
+}
+
+.lg-root .lg-cover-empty {
+    background-color: $surface-container-highest;
+    color: $on-surface-variant;
+}
+
+.lg-root .lg-today {
+    color: $on-primary;
+}
+
+.lg-root .lg-note {
+    color: $on-surface;
+    caret-color: $primary;
+    selection-background-color: $primary-container;
+    selected-color: $on-primary-container;
+}
+
+.lg-root .lg-note StLabel,
+.lg-root .lg-entry StLabel {
+    color: $on-surface-variant;
+}
+
+.lg-root .lg-ghost {
+    background-color: $primary@24;
+}
+
+.lg-root .lg-panel {
+    background-color: $surface-container;
+    color: $on-surface;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.16);
+}
+
+.lg-root .lg-item {
+    background-color: $surface-bright;
+}
+
+.lg-root .lg-item-button:hover {
+    background-color: $surface-container-highest;
+}
+
+.lg-root .lg-entry {
+    background-color: $surface-container-highest;
+    color: $on-surface;
+    caret-color: $primary;
+    selection-background-color: $primary-container;
+    selected-color: $on-primary-container;
+}
+
+.lg-root .lg-segment {
+    background-color: $primary-container;
+    color: $on-primary-container;
+}
+
+.lg-root .lg-segment-selected {
+    background-color: $primary;
+    color: $on-primary;
+}
+
+.lg-root .lg-pill {
+    background-color: $surface-container-highest;
+    color: $on-surface;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.16);
+}
+
+.lg-root .lg-pill:hover {
+    background-color: $surface-bright;
+}
+
+.lg-root .lg-pill-loud {
+    background-color: $primary;
+    color: $on-primary;
+}
+
+.lg-root .lg-pill-loud:hover {
+    background-color: $primary;
+}
+
+.lg-root .lg-today-cell {
+    background-color: $primary;
+    border-radius: $radius-medium;
+}
+
+/* The expressive look: a tile takes a tone of the scheme, and what stands on
+   it the matching on-colour. */
+
+.lg-root.lg-expressive .lg-tile-primary {
+    background-color: $primary-container;
+    color: $on-primary-container;
+}
+
+.lg-root.lg-expressive .lg-tile-secondary {
+    background-color: $secondary-container;
+    color: $on-secondary-container;
+}
+
+.lg-root.lg-expressive .lg-tile-tertiary {
+    background-color: $tertiary-container;
+    color: $on-tertiary-container;
+}
+
+.lg-root.lg-expressive.lg-translucent .lg-tile-primary {
+    background-color: $primary-container@82;
+}
+
+.lg-root.lg-expressive.lg-translucent .lg-tile-secondary {
+    background-color: $secondary-container@82;
+}
+
+.lg-root.lg-expressive.lg-translucent .lg-tile-tertiary {
+    background-color: $tertiary-container@82;
+}
+
+.lg-root.lg-expressive .lg-tile-primary .lg-muted,
+.lg-root.lg-expressive .lg-tile-primary .lg-note,
+.lg-root.lg-expressive .lg-tile-primary .lg-button-quiet {
+    color: $on-primary-container;
+}
+
+.lg-root.lg-expressive .lg-tile-secondary .lg-muted,
+.lg-root.lg-expressive .lg-tile-secondary .lg-note,
+.lg-root.lg-expressive .lg-tile-secondary .lg-note StLabel,
+.lg-root.lg-expressive .lg-tile-secondary .lg-button-quiet {
+    color: $on-secondary-container;
+}
+
+.lg-root.lg-expressive .lg-tile-tertiary .lg-muted,
+.lg-root.lg-expressive .lg-tile-tertiary .lg-note,
+.lg-root.lg-expressive .lg-tile-tertiary .lg-button-quiet {
+    color: $on-tertiary-container;
+}
+
+.lg-root.lg-expressive .lg-tile-secondary .lg-accent {
+    color: $secondary;
+}
+
+.lg-root.lg-expressive .lg-tile-tertiary .lg-accent {
+    color: $tertiary;
+}
+
+.lg-root.lg-expressive .lg-tile-tertiary .lg-today {
+    color: $on-tertiary;
+}
+
+.lg-root.lg-expressive .lg-tile-secondary .lg-button,
+.lg-root.lg-expressive .lg-tile-secondary .lg-button-small,
+.lg-root.lg-expressive .lg-tile-secondary .lg-cover-empty {
+    background-color: $secondary@28;
+    color: $on-secondary-container;
+}
+
+.lg-root.lg-expressive .lg-tile-tertiary .lg-button,
+.lg-root.lg-expressive .lg-tile-tertiary .lg-button-small,
+.lg-root.lg-expressive .lg-tile-tertiary .lg-cover-empty {
+    background-color: $tertiary@28;
+    color: $on-tertiary-container;
+}
+
+.lg-root.lg-expressive .lg-tile-secondary .lg-button-quiet,
+.lg-root.lg-expressive .lg-tile-tertiary .lg-button-quiet {
+    background-color: transparent;
+}
+
+/* After the plain buttons, which a loud one also is. */
+
+.lg-root.lg-expressive .lg-tile-secondary .lg-button-loud,
+.lg-root.lg-expressive .lg-tile-secondary .lg-today-cell {
+    background-color: $secondary;
+    color: $on-secondary;
+}
+
+.lg-root.lg-expressive .lg-tile-tertiary .lg-button-loud,
+.lg-root.lg-expressive .lg-tile-tertiary .lg-today-cell {
+    background-color: $tertiary;
+    color: $on-tertiary;
+}

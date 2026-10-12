@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <!-- A ledge with two things standing on it: a round one and a tall one. -->
+  <rect x="0.5" y="13" width="15" height="2.25" rx="1.125" fill="#222222"/>
+  <circle cx="4.75" cy="7.75" r="4" fill="#222222"/>
+  <rect x="10.25" y="1.5" width="5" height="10.25" rx="2" fill="#222222"/>
+</svg>

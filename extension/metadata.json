@@ -1,0 +1,8 @@
+{
+    "uuid": "ledge@thomashaiden",
+    "name": "Ledge",
+    "description": "Desktop widgets in the style of macOS: a clock, system load, the weather and more, placed freely on the desktop and shown over the windows from the top bar.",
+    "shell-version": ["50"],
+    "settings-schema": "org.gnome.shell.extensions.ledge",
+    "url": "https://github.com/tomsliikee/ledge"
+}

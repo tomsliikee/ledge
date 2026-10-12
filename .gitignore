@@ -1,0 +1,4 @@
+node_modules/
+*.zip
+.dart_tool/
+extension/schemas/gschemas.compiled

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.ledge" path="/org/gnome/shell/extensions/ledge/">
+    <key name="widgets" type="s">
+      <default>''</default>
+      <summary>The widgets and where they lie</summary>
+      <description>A JSON list of {id, type, size, enabled, monitor, x, y, options}. Empty until the first start, which places a default set.</description>
+    </key>
+    <key name="style" type="s">
+      <default>'blue'</default>
+      <summary>Colour style</summary>
+    </key>
+    <key name="translucent" type="b">
+      <default>false</default>
+      <summary>Let the wallpaper show through the widgets</summary>
+    </key>
+    <key name="animations" type="b">
+      <default>true</default>
+      <summary>Animate the widgets</summary>
+    </key>
+    <key name="expressive" type="b">
+      <default>true</default>
+      <summary>The expressive look</summary>
+      <description>On: tiles in the tones of the colour scheme, and values on shapes that grow more pronounced with the value. Off: neutral tiles with colour only in rings and lines.</description>
+    </key>
+    <key name="screens" type="s">
+      <choices>
+        <choice value="own"/>
+        <choice value="mirror"/>
+        <choice value="primary"/>
+      </choices>
+      <default>'own'</default>
+      <summary>How several monitors are used</summary>
+      <description>own: each monitor has its own widgets. mirror: all widgets show on every monitor, at the same place on each. primary: all widgets show on the primary monitor only.</description>
+    </key>
+    <key name="place" type="s">
+      <default>''</default>
+      <summary>The place for the weather</summary>
+      <description>JSON of {name, region, latitude, longitude, timezone}, as chosen from the search.</description>
+    </key>
+  </schema>
+</schemalist>
