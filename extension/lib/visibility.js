@@ -1,3 +1,5 @@
+import {visibleOf} from './stack.js';
+
 // Which monitors' desktops cannot be seen: a maximised or full-screen
 // window hides everything beneath it.
 //
@@ -12,7 +14,14 @@ export function coveredMonitors(windows) {
 }
 
 // The widgets that get a tile: those switched on, less the ones asked to
-// step aside while the machine runs on its battery.
+// step aside while the machine runs on its battery, and of each stack
+// only the one that is on top.
 export function shownWidgets(widgets, {onBattery}) {
+    return visibleOf(mayShow(widgets, {onBattery}));
+}
+
+// The same before the stacks are reduced to their tops: what a stack can
+// be turned through.
+export function mayShow(widgets, {onBattery}) {
     return widgets.filter(widget => widget.enabled && !(onBattery && widget.options.hideOnBattery === true));
 }

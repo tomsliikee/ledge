@@ -82,6 +82,9 @@ export default class Driver extends Extension {
             press: () => pointer.notify_button(time(), Clutter.BUTTON_PRIMARY, Clutter.ButtonState.PRESSED),
             secondary: down => pointer.notify_button(time(), Clutter.BUTTON_SECONDARY,
                 down ? Clutter.ButtonState.PRESSED : Clutter.ButtonState.RELEASED),
+            // One notch of the wheel; down is true for towards the user.
+            wheel: down => pointer.notify_discrete_scroll(time(),
+                down ? Clutter.ScrollDirection.DOWN : Clutter.ScrollDirection.UP, Clutter.ScrollSource.WHEEL),
             release: () => pointer.notify_button(time(), Clutter.BUTTON_PRIMARY, Clutter.ButtonState.RELEASED),
         });
         global.context.terminate();

@@ -3,7 +3,7 @@ import {fromBackup, toBackup} from '../extension/lib/backup.js';
 
 const types = {clock: ['small', 'medium'], note: ['small']};
 const styles = ['blue', 'green'];
-const widget = {id: 'clock-1', type: 'clock', size: 'medium', enabled: true, placed: true, monitor: 'eDP-1', x: 24, y: 40, options: {face: 'digital'}};
+const widget = {id: 'clock-1', type: 'clock', size: 'medium', enabled: true, placed: true, monitor: 'eDP-1', x: 24, y: 40, options: {face: 'digital'}, stack: null, top: false};
 const settings = {
     widgets: [widget], style: 'green', expressive: false, translucent: true, animations: true, screens: 'mirror',
     place: {name: 'Vienna', region: 'Austria', latitude: 48.2, longitude: 16.4, timezone: 'Europe/Vienna'},

@@ -72,6 +72,24 @@
     border-radius: 28px;
 }
 
+/* The dots down the edge of a stack. The button is larger than its mark,
+   to be hit. */
+.lg-dots {
+    spacing: 0;
+}
+
+.lg-dot {
+    width: 12px;
+    height: 12px;
+    padding: 3px;
+}
+
+.lg-dot-mark {
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+}
+
 .lg-panel {
     width: 360px;
     padding: 16px;
@@ -260,6 +278,18 @@
     background-color: rgba(0, 69, 252, 0.24);
 }
 
+.lg-root-blue-light .lg-ghost-stack {
+    background-color: rgba(107, 85, 133, 0.48);
+}
+
+.lg-root-blue-light .lg-dot-mark {
+    background-color: rgba(25, 27, 37, 0.4);
+}
+
+.lg-root-blue-light .lg-dot-on .lg-dot-mark {
+    background-color: #191b25;
+}
+
 .lg-root-blue-light .lg-panel {
     background-color: #edecfb;
     color: #191b25;
@@ -410,6 +440,30 @@
     color: #ffffff;
 }
 
+.lg-root-blue-light.lg-expressive .lg-tile-primary .lg-dot-mark {
+    background-color: rgba(0, 51, 194, 0.4);
+}
+
+.lg-root-blue-light.lg-expressive .lg-tile-primary .lg-dot-on .lg-dot-mark {
+    background-color: #0033c2;
+}
+
+.lg-root-blue-light.lg-expressive .lg-tile-secondary .lg-dot-mark {
+    background-color: rgba(71, 67, 100, 0.4);
+}
+
+.lg-root-blue-light.lg-expressive .lg-tile-secondary .lg-dot-on .lg-dot-mark {
+    background-color: #474364;
+}
+
+.lg-root-blue-light.lg-expressive .lg-tile-tertiary .lg-dot-mark {
+    background-color: rgba(82, 61, 108, 0.4);
+}
+
+.lg-root-blue-light.lg-expressive .lg-tile-tertiary .lg-dot-on .lg-dot-mark {
+    background-color: #523d6c;
+}
+
 .lg-root-blue-dark .lg-tile {
     background-color: #1d1f29;
     color: #e2e1ef;
@@ -501,6 +555,18 @@
 
 .lg-root-blue-dark .lg-ghost {
     background-color: rgba(185, 195, 255, 0.24);
+}
+
+.lg-root-blue-dark .lg-ghost-stack {
+    background-color: rgba(214, 188, 244, 0.48);
+}
+
+.lg-root-blue-dark .lg-dot-mark {
+    background-color: rgba(226, 225, 239, 0.4);
+}
+
+.lg-root-blue-dark .lg-dot-on .lg-dot-mark {
+    background-color: #e2e1ef;
 }
 
 .lg-root-blue-dark .lg-panel {
@@ -653,6 +719,30 @@
     color: #3b2754;
 }
 
+.lg-root-blue-dark.lg-expressive .lg-tile-primary .lg-dot-mark {
+    background-color: rgba(222, 225, 255, 0.4);
+}
+
+.lg-root-blue-dark.lg-expressive .lg-tile-primary .lg-dot-on .lg-dot-mark {
+    background-color: #dee1ff;
+}
+
+.lg-root-blue-dark.lg-expressive .lg-tile-secondary .lg-dot-mark {
+    background-color: rgba(229, 222, 255, 0.4);
+}
+
+.lg-root-blue-dark.lg-expressive .lg-tile-secondary .lg-dot-on .lg-dot-mark {
+    background-color: #e5deff;
+}
+
+.lg-root-blue-dark.lg-expressive .lg-tile-tertiary .lg-dot-mark {
+    background-color: rgba(238, 219, 255, 0.4);
+}
+
+.lg-root-blue-dark.lg-expressive .lg-tile-tertiary .lg-dot-on .lg-dot-mark {
+    background-color: #eedbff;
+}
+
 .lg-root-violet-light .lg-tile {
     background-color: #f3ebfa;
     color: #1d1a24;
@@ -744,6 +834,18 @@
 
 .lg-root-violet-light .lg-ghost {
     background-color: rgba(119, 6, 255, 0.24);
+}
+
+.lg-root-violet-light .lg-ghost-stack {
+    background-color: rgba(120, 81, 123, 0.48);
+}
+
+.lg-root-violet-light .lg-dot-mark {
+    background-color: rgba(29, 26, 36, 0.4);
+}
+
+.lg-root-violet-light .lg-dot-on .lg-dot-mark {
+    background-color: #1d1a24;
 }
 
 .lg-root-violet-light .lg-panel {
@@ -896,6 +998,30 @@
     color: #ffffff;
 }
 
+.lg-root-violet-light.lg-expressive .lg-tile-primary .lg-dot-mark {
+    background-color: rgba(90, 0, 198, 0.4);
+}
+
+.lg-root-violet-light.lg-expressive .lg-tile-primary .lg-dot-on .lg-dot-mark {
+    background-color: #5a00c6;
+}
+
+.lg-root-violet-light.lg-expressive .lg-tile-secondary .lg-dot-mark {
+    background-color: rgba(82, 63, 95, 0.4);
+}
+
+.lg-root-violet-light.lg-expressive .lg-tile-secondary .lg-dot-on .lg-dot-mark {
+    background-color: #523f5f;
+}
+
+.lg-root-violet-light.lg-expressive .lg-tile-tertiary .lg-dot-mark {
+    background-color: rgba(94, 57, 98, 0.4);
+}
+
+.lg-root-violet-light.lg-expressive .lg-tile-tertiary .lg-dot-on .lg-dot-mark {
+    background-color: #5e3962;
+}
+
 .lg-root-violet-dark .lg-tile {
     background-color: #221e28;
     color: #e8dfee;
@@ -987,6 +1113,18 @@
 
 .lg-root-violet-dark .lg-ghost {
     background-color: rgba(210, 187, 255, 0.24);
+}
+
+.lg-root-violet-dark .lg-ghost-stack {
+    background-color: rgba(230, 183, 232, 0.48);
+}
+
+.lg-root-violet-dark .lg-dot-mark {
+    background-color: rgba(232, 223, 238, 0.4);
+}
+
+.lg-root-violet-dark .lg-dot-on .lg-dot-mark {
+    background-color: #e8dfee;
 }
 
 .lg-root-violet-dark .lg-panel {
@@ -1139,6 +1277,30 @@
     color: #45234b;
 }
 
+.lg-root-violet-dark.lg-expressive .lg-tile-primary .lg-dot-mark {
+    background-color: rgba(234, 221, 255, 0.4);
+}
+
+.lg-root-violet-dark.lg-expressive .lg-tile-primary .lg-dot-on .lg-dot-mark {
+    background-color: #eaddff;
+}
+
+.lg-root-violet-dark.lg-expressive .lg-tile-secondary .lg-dot-mark {
+    background-color: rgba(242, 218, 255, 0.4);
+}
+
+.lg-root-violet-dark.lg-expressive .lg-tile-secondary .lg-dot-on .lg-dot-mark {
+    background-color: #f2daff;
+}
+
+.lg-root-violet-dark.lg-expressive .lg-tile-tertiary .lg-dot-mark {
+    background-color: rgba(255, 213, 255, 0.4);
+}
+
+.lg-root-violet-dark.lg-expressive .lg-tile-tertiary .lg-dot-on .lg-dot-mark {
+    background-color: #ffd5ff;
+}
+
 .lg-root-green-light .lg-tile {
     background-color: #e6f1e3;
     color: #151e15;
@@ -1230,6 +1392,18 @@
 
 .lg-root-green-light .lg-ghost {
     background-color: rgba(0, 110, 46, 0.24);
+}
+
+.lg-root-green-light .lg-ghost-stack {
+    background-color: rgba(33, 105, 92, 0.48);
+}
+
+.lg-root-green-light .lg-dot-mark {
+    background-color: rgba(21, 30, 21, 0.4);
+}
+
+.lg-root-green-light .lg-dot-on .lg-dot-mark {
+    background-color: #151e15;
 }
 
 .lg-root-green-light .lg-panel {
@@ -1382,6 +1556,30 @@
     color: #ffffff;
 }
 
+.lg-root-green-light.lg-expressive .lg-tile-primary .lg-dot-mark {
+    background-color: rgba(0, 83, 33, 0.4);
+}
+
+.lg-root-green-light.lg-expressive .lg-tile-primary .lg-dot-on .lg-dot-mark {
+    background-color: #005321;
+}
+
+.lg-root-green-light.lg-expressive .lg-tile-secondary .lg-dot-mark {
+    background-color: rgba(40, 78, 60, 0.4);
+}
+
+.lg-root-green-light.lg-expressive .lg-tile-secondary .lg-dot-on .lg-dot-mark {
+    background-color: #284e3c;
+}
+
+.lg-root-green-light.lg-expressive .lg-tile-tertiary .lg-dot-mark {
+    background-color: rgba(0, 80, 69, 0.4);
+}
+
+.lg-root-green-light.lg-expressive .lg-tile-tertiary .lg-dot-on .lg-dot-mark {
+    background-color: #005045;
+}
+
 .lg-root-green-dark .lg-tile {
     background-color: #192219;
     color: #dbe5d7;
@@ -1473,6 +1671,18 @@
 
 .lg-root-green-dark .lg-ghost {
     background-color: rgba(0, 228, 104, 0.24);
+}
+
+.lg-root-green-dark .lg-ghost-stack {
+    background-color: rgba(143, 212, 195, 0.48);
+}
+
+.lg-root-green-dark .lg-dot-mark {
+    background-color: rgba(219, 229, 215, 0.4);
+}
+
+.lg-root-green-dark .lg-dot-on .lg-dot-mark {
+    background-color: #dbe5d7;
 }
 
 .lg-root-green-dark .lg-panel {
@@ -1625,6 +1835,30 @@
     color: #00382f;
 }
 
+.lg-root-green-dark.lg-expressive .lg-tile-primary .lg-dot-mark {
+    background-color: rgba(103, 255, 141, 0.4);
+}
+
+.lg-root-green-dark.lg-expressive .lg-tile-primary .lg-dot-on .lg-dot-mark {
+    background-color: #67ff8d;
+}
+
+.lg-root-green-dark.lg-expressive .lg-tile-secondary .lg-dot-mark {
+    background-color: rgba(193, 236, 212, 0.4);
+}
+
+.lg-root-green-dark.lg-expressive .lg-tile-secondary .lg-dot-on .lg-dot-mark {
+    background-color: #c1ecd4;
+}
+
+.lg-root-green-dark.lg-expressive .lg-tile-tertiary .lg-dot-mark {
+    background-color: rgba(170, 240, 223, 0.4);
+}
+
+.lg-root-green-dark.lg-expressive .lg-tile-tertiary .lg-dot-on .lg-dot-mark {
+    background-color: #aaf0df;
+}
+
 .lg-root-orange-light .lg-tile {
     background-color: #ffe9e3;
     color: #271813;
@@ -1716,6 +1950,18 @@
 
 .lg-root-orange-light .lg-ghost {
     background-color: rgba(171, 53, 0, 0.24);
+}
+
+.lg-root-orange-light .lg-ghost-stack {
+    background-color: rgba(126, 86, 30, 0.48);
+}
+
+.lg-root-orange-light .lg-dot-mark {
+    background-color: rgba(39, 24, 19, 0.4);
+}
+
+.lg-root-orange-light .lg-dot-on .lg-dot-mark {
+    background-color: #271813;
 }
 
 .lg-root-orange-light .lg-panel {
@@ -1868,6 +2114,30 @@
     color: #ffffff;
 }
 
+.lg-root-orange-light.lg-expressive .lg-tile-primary .lg-dot-mark {
+    background-color: rgba(131, 39, 0, 0.4);
+}
+
+.lg-root-orange-light.lg-expressive .lg-tile-primary .lg-dot-on .lg-dot-mark {
+    background-color: #832700;
+}
+
+.lg-root-orange-light.lg-expressive .lg-tile-secondary .lg-dot-mark {
+    background-color: rgba(99, 62, 34, 0.4);
+}
+
+.lg-root-orange-light.lg-expressive .lg-tile-secondary .lg-dot-on .lg-dot-mark {
+    background-color: #633e22;
+}
+
+.lg-root-orange-light.lg-expressive .lg-tile-tertiary .lg-dot-mark {
+    background-color: rgba(99, 63, 6, 0.4);
+}
+
+.lg-root-orange-light.lg-expressive .lg-tile-tertiary .lg-dot-on .lg-dot-mark {
+    background-color: #633f06;
+}
+
 .lg-root-orange-dark .lg-tile {
     background-color: #2b1c17;
     color: #f9ddd4;
@@ -1959,6 +2229,18 @@
 
 .lg-root-orange-dark .lg-ghost {
     background-color: rgba(255, 181, 156, 0.24);
+}
+
+.lg-root-orange-dark .lg-ghost-stack {
+    background-color: rgba(242, 189, 122, 0.48);
+}
+
+.lg-root-orange-dark .lg-dot-mark {
+    background-color: rgba(249, 221, 212, 0.4);
+}
+
+.lg-root-orange-dark .lg-dot-on .lg-dot-mark {
+    background-color: #f9ddd4;
 }
 
 .lg-root-orange-dark .lg-panel {
@@ -2111,6 +2393,30 @@
     color: #462a00;
 }
 
+.lg-root-orange-dark.lg-expressive .lg-tile-primary .lg-dot-mark {
+    background-color: rgba(255, 219, 208, 0.4);
+}
+
+.lg-root-orange-dark.lg-expressive .lg-tile-primary .lg-dot-on .lg-dot-mark {
+    background-color: #ffdbd0;
+}
+
+.lg-root-orange-dark.lg-expressive .lg-tile-secondary .lg-dot-mark {
+    background-color: rgba(255, 220, 197, 0.4);
+}
+
+.lg-root-orange-dark.lg-expressive .lg-tile-secondary .lg-dot-on .lg-dot-mark {
+    background-color: #ffdcc5;
+}
+
+.lg-root-orange-dark.lg-expressive .lg-tile-tertiary .lg-dot-mark {
+    background-color: rgba(255, 221, 182, 0.4);
+}
+
+.lg-root-orange-dark.lg-expressive .lg-tile-tertiary .lg-dot-on .lg-dot-mark {
+    background-color: #ffddb6;
+}
+
 .lg-root-pink-light .lg-tile {
     background-color: #ffe8ec;
     color: #26181b;
@@ -2202,6 +2508,18 @@
 
 .lg-root-pink-light .lg-ghost {
     background-color: rgba(186, 0, 91, 0.24);
+}
+
+.lg-root-pink-light .lg-ghost-stack {
+    background-color: rgba(138, 78, 57, 0.48);
+}
+
+.lg-root-pink-light .lg-dot-mark {
+    background-color: rgba(38, 24, 27, 0.4);
+}
+
+.lg-root-pink-light .lg-dot-on .lg-dot-mark {
+    background-color: #26181b;
 }
 
 .lg-root-pink-light .lg-panel {
@@ -2354,6 +2672,30 @@
     color: #ffffff;
 }
 
+.lg-root-pink-light.lg-expressive .lg-tile-primary .lg-dot-mark {
+    background-color: rgba(143, 0, 68, 0.4);
+}
+
+.lg-root-pink-light.lg-expressive .lg-tile-primary .lg-dot-on .lg-dot-mark {
+    background-color: #8f0044;
+}
+
+.lg-root-pink-light.lg-expressive .lg-tile-secondary .lg-dot-mark {
+    background-color: rgba(102, 59, 57, 0.4);
+}
+
+.lg-root-pink-light.lg-expressive .lg-tile-secondary .lg-dot-on .lg-dot-mark {
+    background-color: #663b39;
+}
+
+.lg-root-pink-light.lg-expressive .lg-tile-tertiary .lg-dot-mark {
+    background-color: rgba(110, 56, 36, 0.4);
+}
+
+.lg-root-pink-light.lg-expressive .lg-tile-tertiary .lg-dot-on .lg-dot-mark {
+    background-color: #6e3824;
+}
+
 .lg-root-pink-dark .lg-tile {
     background-color: #2a1c1f;
     color: #f6dce1;
@@ -2445,6 +2787,18 @@
 
 .lg-root-pink-dark .lg-ghost {
     background-color: rgba(255, 177, 196, 0.24);
+}
+
+.lg-root-pink-dark .lg-ghost-stack {
+    background-color: rgba(255, 181, 155, 0.48);
+}
+
+.lg-root-pink-dark .lg-dot-mark {
+    background-color: rgba(246, 220, 225, 0.4);
+}
+
+.lg-root-pink-dark .lg-dot-on .lg-dot-mark {
+    background-color: #f6dce1;
 }
 
 .lg-root-pink-dark .lg-panel {
@@ -2595,4 +2949,28 @@
 .lg-root-pink-dark.lg-expressive .lg-tile-tertiary .lg-today-cell {
     background-color: #ffb59b;
     color: #522210;
+}
+
+.lg-root-pink-dark.lg-expressive .lg-tile-primary .lg-dot-mark {
+    background-color: rgba(255, 217, 225, 0.4);
+}
+
+.lg-root-pink-dark.lg-expressive .lg-tile-primary .lg-dot-on .lg-dot-mark {
+    background-color: #ffd9e1;
+}
+
+.lg-root-pink-dark.lg-expressive .lg-tile-secondary .lg-dot-mark {
+    background-color: rgba(255, 218, 215, 0.4);
+}
+
+.lg-root-pink-dark.lg-expressive .lg-tile-secondary .lg-dot-on .lg-dot-mark {
+    background-color: #ffdad7;
+}
+
+.lg-root-pink-dark.lg-expressive .lg-tile-tertiary .lg-dot-mark {
+    background-color: rgba(255, 219, 207, 0.4);
+}
+
+.lg-root-pink-dark.lg-expressive .lg-tile-tertiary .lg-dot-on .lg-dot-mark {
+    background-color: #ffdbcf;
 }

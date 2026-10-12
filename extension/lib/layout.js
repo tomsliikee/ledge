@@ -1,10 +1,13 @@
 // Where the widgets lie. A widget is
-//   {id, type, size, enabled, placed, monitor, x, y, options}
+//   {id, type, size, enabled, placed, monitor, x, y, options, stack, top}
 // with x and y in pixels from the top left of its monitor's work area and
 // monitor as the connector name ("eDP-1"), so a layout survives a monitor
 // that comes and goes. placed is false for a widget that was added where
 // the screen is not known (the settings window); the shell then finds it a
-// free spot.
+// free spot. stack and top are set on widgets that share a place; see
+// stack.js.
+
+import {tidy} from './stack.js';
 
 const UNIT = 160;
 export const GAP = 16;
@@ -33,7 +36,7 @@ export function parseLayout(text, types) {
     if (!Array.isArray(list))
         return [];
     const seen = new Set();
-    return list.filter(w => w && typeof w.id === 'string' && types[w.type] && !seen.has(w.id) && seen.add(w.id))
+    return tidy(list.filter(w => w && typeof w.id === 'string' && types[w.type] && !seen.has(w.id) && seen.add(w.id))
         .map(w => ({
             id: w.id,
             type: w.type,
@@ -44,7 +47,9 @@ export function parseLayout(text, types) {
             x: Number.isFinite(w.x) ? w.x : MARGIN,
             y: Number.isFinite(w.y) ? w.y : MARGIN,
             options: w.options && typeof w.options === 'object' ? w.options : {},
-        }));
+            stack: typeof w.stack === 'string' ? w.stack : null,
+            top: w.top === true,
+        })));
 }
 
 // The connected monitor a widget shows on. Its stored monitor is kept, so
@@ -102,6 +107,8 @@ export function addWidget(widgets, type, entry, position = null) {
         x: position?.x ?? MARGIN,
         y: position?.y ?? MARGIN,
         options: {...entry.defaults},
+        stack: null,
+        top: false,
     }];
 }
 

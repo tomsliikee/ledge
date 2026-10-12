@@ -70,6 +70,24 @@
     border-radius: $radius-extra-large;
 }
 
+/* The dots down the edge of a stack. The button is larger than its mark,
+   to be hit. */
+.lg-dots {
+    spacing: 0;
+}
+
+.lg-dot {
+    width: 12px;
+    height: 12px;
+    padding: 3px;
+}
+
+.lg-dot-mark {
+    width: 6px;
+    height: 6px;
+    border-radius: $radius-full;
+}
+
 .lg-panel {
     width: 360px;
     padding: $space-4;
@@ -260,6 +278,18 @@
     background-color: $primary@24;
 }
 
+.lg-root .lg-ghost-stack {
+    background-color: $tertiary@48;
+}
+
+.lg-root .lg-dot-mark {
+    background-color: $on-surface@40;
+}
+
+.lg-root .lg-dot-on .lg-dot-mark {
+    background-color: $on-surface;
+}
+
 .lg-root .lg-panel {
     background-color: $surface-container;
     color: $on-surface;
@@ -408,4 +438,28 @@
 .lg-root.lg-expressive .lg-tile-tertiary .lg-today-cell {
     background-color: $tertiary;
     color: $on-tertiary;
+}
+
+.lg-root.lg-expressive .lg-tile-primary .lg-dot-mark {
+    background-color: $on-primary-container@40;
+}
+
+.lg-root.lg-expressive .lg-tile-primary .lg-dot-on .lg-dot-mark {
+    background-color: $on-primary-container;
+}
+
+.lg-root.lg-expressive .lg-tile-secondary .lg-dot-mark {
+    background-color: $on-secondary-container@40;
+}
+
+.lg-root.lg-expressive .lg-tile-secondary .lg-dot-on .lg-dot-mark {
+    background-color: $on-secondary-container;
+}
+
+.lg-root.lg-expressive .lg-tile-tertiary .lg-dot-mark {
+    background-color: $on-tertiary-container@40;
+}
+
+.lg-root.lg-expressive .lg-tile-tertiary .lg-dot-on .lg-dot-mark {
+    background-color: $on-tertiary-container;
 }

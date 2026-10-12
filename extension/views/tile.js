@@ -26,6 +26,7 @@ class Tile extends St.Widget {
         this._watchers = new Set();
         this._live = false;
         this._view = null;
+        this._stack = null;
         this.connect('destroy', () => this._clear());
         this.rebuild(widget);
     }
@@ -67,6 +68,46 @@ class Tile extends St.Widget {
         this._view.actor.x_expand = true;
         this._view.actor.y_expand = true;
         this.add_child(this._view.actor);
+        this._addDots();
+    }
+
+    // Marks the tile as the top of a stack of count widgets, of which it is
+    // the one at index. onPick is called with the index of a dot clicked.
+    setStack(count, index, onPick) {
+        const same = this._stack?.count === count && this._stack?.index === index;
+        this._stack = count > 1 ? {count, index, onPick} : null;
+        if (same)
+            return;
+        this._dots?.destroy();
+        this._dots = null;
+        this._addDots();
+    }
+
+    // One dot per widget in the stack, down the right edge.
+    _addDots() {
+        if (!this._stack)
+            return;
+        const {count, index} = this._stack;
+        this._dots = new St.BoxLayout({
+            vertical: true,
+            style_class: 'lg-dots',
+            x_expand: true,
+            y_expand: true,
+            x_align: Clutter.ActorAlign.END,
+            y_align: Clutter.ActorAlign.CENTER,
+            // Into the tile's padding, clear of the content.
+            translation_x: this._definition.bare ? -sizes['space-1'] : sizes['space-3'],
+        });
+        for (let i = 0; i < count; i++) {
+            const dot = new St.Button({
+                style_class: i === index ? 'lg-dot lg-dot-on' : 'lg-dot',
+                child: new St.Widget({style_class: 'lg-dot-mark'}),
+                accessible_name: `Widget ${i + 1} of ${count}`,
+            });
+            dot.connect('clicked', () => this._stack?.onPick(i));
+            this._dots.add_child(dot);
+        }
+        this.add_child(this._dots);
     }
 
     // One widget that fails to build must not take the others with it.
@@ -111,6 +152,7 @@ class Tile extends St.Widget {
         this._watchers.clear();
         this._view?.destroy?.();
         this._view = null;
+        this._dots = null;
         this.destroy_all_children();
     }
 });

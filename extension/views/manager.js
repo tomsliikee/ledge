@@ -11,10 +11,11 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import {STARTERS, catalog} from '../lib/catalog.js';
+import {STARTERS, catalog, typeSizes} from '../lib/catalog.js';
 import * as Layout from '../lib/layout.js';
 import {snap} from '../lib/snap.js';
-import {coveredMonitors, shownWidgets} from '../lib/visibility.js';
+import * as Stack from '../lib/stack.js';
+import {coveredMonitors, mayShow} from '../lib/visibility.js';
 import * as Monitors from './monitors.js';
 import {LAYOUT_MS, STATE_MS, ease, setMotion} from './motion.js';
 import {Overlay} from './overlay.js';
@@ -27,6 +28,12 @@ const DRAG_THRESHOLD = 6;
 const LIFTED_SCALE = 1.03;
 const APPEAR_SCALE = 0.96;
 const APPEAR_RISE = 12;
+// How far the widgets of a stack travel when it is turned.
+const TURN_RISE = 24;
+// A wheel sends many small steps; a stack takes one of them per this long.
+const TURN_EVERY_MS = 220;
+// A dragged widget this close to the middle of another is laid on it.
+const STACK_REACH = 48;
 
 export class Manager {
     constructor({store, hub, idle, power}) {
@@ -36,6 +43,10 @@ export class Manager {
         this._idle = idle;
         this._tiles = new Map();
         this._drag = null;
+        this._turnStep = 1;
+        this._turnedAt = 0;
+        // Set while the widgets are being arranged.
+        this.arranging = false;
         this._recount = 0;
         this._covered = new Set();
         this._signals = [];
@@ -166,7 +177,8 @@ export class Manager {
         const primary = Monitors.primaryIndex();
         const screens = this._store.screens;
         const wanted = new Map();
-        for (const widget of shownWidgets(this._store.widgets, {onBattery: this._power.onBattery})) {
+        const may = mayShow(this._store.widgets, {onBattery: this._power.onBattery});
+        for (const widget of Stack.visibleOf(may)) {
             if (screens === 'mirror') {
                 for (const monitor of Main.layoutManager.monitors)
                     wanted.set(`${widget.id}@${monitor.index}`, {widget, index: monitor.index});
@@ -177,19 +189,31 @@ export class Manager {
                 wanted.set(widget.id, {widget, index});
             }
         }
+        // The tiles that go, by the stack they were the top of: one whose
+        // stack shows another widget now is turned over, not just removed.
+        const leaving = new Map();
         for (const [key, tile] of this._tiles) {
-            if (!wanted.has(key)) {
+            if (wanted.has(key))
+                continue;
+            this._tiles.delete(key);
+            if (tile.widget.stack)
+                leaving.set(`${tile.widget.stack}@${tile.monitorIndex}`, tile);
+            else
                 tile.destroy();
-                this._tiles.delete(key);
-            }
         }
         for (const [key, {widget, index}] of wanted) {
             let tile = this._tiles.get(key);
             if (!tile) {
                 tile = new Tile({widget, definition: catalog[widget.type], build: builders[widget.type], services: this._services});
                 tile.connect('button-press-event', (_tile, event) => this._pressed(tile, event));
+                tile.connect('scroll-event', (_tile, event) => this._scrolled(tile, event));
                 this._container().add_child(tile);
                 this._tiles.set(key, tile);
+                const before = leaving.get(`${widget.stack}@${index}`);
+                if (before) {
+                    leaving.delete(`${widget.stack}@${index}`);
+                    this._turnOver(before, tile);
+                }
             } else if (tile.widget.size !== widget.size ||
                 JSON.stringify(tile.widget.options) !== JSON.stringify(widget.options)) {
                 tile.rebuild(widget);
@@ -197,7 +221,11 @@ export class Manager {
                 tile.widget = widget;
             }
             tile.monitorIndex = index;
+            const members = may.filter(other => other.stack && other.stack === widget.stack);
+            tile.setStack(members.length, members.indexOf(widget), i => this._showMember(members[i].id, i - members.indexOf(widget)));
         }
+        for (const tile of leaving.values())
+            tile.destroy();
         this._relayout();
         this._updateLive();
         this._onSynced?.();
@@ -213,18 +241,20 @@ export class Manager {
         const names = Monitors.connectors();
         const index = this._store.screens === 'own' ? this.targetMonitor ?? Monitors.primaryIndex() : Monitors.primaryIndex();
         const area = Monitors.workArea(index);
-        const placed = [];
-        for (const widget of widgets) {
-            if (widget.placed) {
-                placed.push(widget);
-                continue;
-            }
-            const taken = placed
+        // Every widget with a place takes up room, wherever in the list it is,
+        // and so does each one placed here.
+        const settled = widgets.filter(widget => widget.placed);
+        const placed = widgets.map(widget => {
+            if (widget.placed)
+                return widget;
+            const taken = settled
                 .filter(other => other.enabled && Layout.monitorFor(other, names, names[index]) === names[index])
                 // As they are shown: a widget stored beyond the edge lies inside it.
                 .map(other => Layout.clamp(Layout.rectOf(other), area));
-            placed.push({...widget, placed: true, monitor: names[index] ?? null, ...Layout.freeSpot(widget.size, taken, area)});
-        }
+            const found = {...widget, placed: true, monitor: names[index] ?? null, ...Layout.freeSpot(widget.size, taken, area)};
+            settled.push(found);
+            return found;
+        });
         this._store.widgets = placed;
         return true;
     }
@@ -257,6 +287,49 @@ export class Manager {
         if (!rebuild)
             tile.widget = {...tile.widget, options: {...tile.widget.options, ...patch}};
         this._store.updateWidget(id, widget => ({...widget, options: {...widget.options, ...patch}}));
+    }
+
+    // --- stacks ---------------------------------------------------------
+
+    // The old top leaves the way the stack was turned and the new one
+    // follows it in.
+    _turnOver(before, tile) {
+        const way = Math.sign(this._turnStep) || 1;
+        before.reactive = false;
+        before.setLive(false);
+        ease(before, {
+            opacity: 0, translation_y: -way * TURN_RISE,
+            onComplete: () => before.destroy(),
+        }, STATE_MS, Clutter.AnimationMode.EASE_IN_CUBIC);
+        tile.set({opacity: 0, translation_y: way * TURN_RISE});
+        ease(tile, {opacity: 255, translation_y: 0}, LAYOUT_MS, Clutter.AnimationMode.EASE_OUT_QUINT);
+    }
+
+    _showMember(id, step) {
+        this._turnStep = step;
+        this._store.widgets = Stack.show(this._store.widgets, id);
+    }
+
+    _scrolled(tile, event) {
+        if (!tile.widget.stack)
+            return Clutter.EVENT_PROPAGATE;
+        let step = 0;
+        const direction = event.get_scroll_direction();
+        if (direction === Clutter.ScrollDirection.UP)
+            step = -1;
+        else if (direction === Clutter.ScrollDirection.DOWN)
+            step = 1;
+        else if (direction === Clutter.ScrollDirection.SMOOTH)
+            step = Math.sign(event.get_scroll_delta()[1]);
+        const now = GLib.get_monotonic_time() / 1000;
+        if (step === 0 || now - this._turnedAt < TURN_EVERY_MS)
+            return Clutter.EVENT_STOP;
+        this._turnedAt = now;
+        this._turnStep = step;
+        const widgets = this._store.widgets;
+        this._store.widgets = Stack.turn(widgets, tile.widget.stack, step,
+            mayShow(widgets, {onBattery: this._power.onBattery}));
+        return Clutter.EVENT_STOP;
     }
 
     // --- what can be seen ---------------------------------------------
@@ -400,6 +473,23 @@ export class Manager {
         return {index, area, x: rect.x, y: rect.y};
     }
 
+    // The tile a dragged one would be laid on: while arranging, one whose
+    // middle it is held over and whose size it offers.
+    _stackTarget(tile) {
+        if (!this.arranging)
+            return null;
+        const widgets = this._store.widgets;
+        const middle = other => [other.x + other.width / 2, other.y + other.height / 2];
+        const [x, y] = middle(tile);
+        return this.tiles.find(other => {
+            if (other === tile || !other.visible || other.monitorIndex !== tile.monitorIndex)
+                return false;
+            const [otherX, otherY] = middle(other);
+            return Math.hypot(otherX - x, otherY - y) < STACK_REACH &&
+                Stack.canJoin(widgets, tile.widget.id, other.widget.id, typeSizes);
+        }) ?? null;
+    }
+
     _dragged(event) {
         const drag = this._drag;
         const [pointerX, pointerY] = event.get_coords();
@@ -415,6 +505,15 @@ export class Manager {
         const x = pointerX + drag.offsetX;
         const y = pointerY + drag.offsetY;
         drag.tile.set_position(x, y);
+        drag.onto = this._stackTarget(drag.tile);
+        if (drag.onto) {
+            this._ghost.add_style_class_name('lg-ghost-stack');
+            this._ghost.set_size(drag.onto.width, drag.onto.height);
+            this._ghost.set_position(drag.onto.x, drag.onto.y);
+            return Clutter.EVENT_STOP;
+        }
+        this._ghost.remove_style_class_name('lg-ghost-stack');
+        this._ghost.set_size(drag.tile.width, drag.tile.height);
         const target = this._target(drag.tile, x, y);
         this._ghost.set_position(target.area.x + target.x, target.area.y + target.y);
         return Clutter.EVENT_STOP;
@@ -433,6 +532,11 @@ export class Manager {
                 this._open(drag.tile);
             return Clutter.EVENT_STOP;
         }
+        if (drag.onto) {
+            ease(drag.tile, {x: drag.onto.x, y: drag.onto.y, scale_x: 1, scale_y: 1}, STATE_MS);
+            this._store.widgets = Stack.join(this._store.widgets, drag.tile.widget.id, drag.onto.widget.id, typeSizes);
+            return Clutter.EVENT_STOP;
+        }
         const target = this._target(drag.tile, drag.tile.x, drag.tile.y);
         drag.tile.monitorIndex = target.index;
         ease(drag.tile, {
@@ -441,9 +545,10 @@ export class Manager {
         const monitor = Monitors.connectors()[target.index] ?? null;
         // The monitor a widget belongs to is only rewritten where it shows;
         // the other modes keep it for the way back.
-        this._store.updateWidget(drag.tile.widget.id, widget => this._store.screens === 'own'
-            ? {...widget, monitor, x: target.x, y: target.y}
-            : {...widget, x: target.x, y: target.y});
+        // A stack moves as one.
+        this._store.widgets = Stack.setShared(this._store.widgets, drag.tile.widget.id, this._store.screens === 'own'
+            ? {monitor, x: target.x, y: target.y}
+            : {x: target.x, y: target.y});
         this._updateLive();
         return Clutter.EVENT_STOP;
     }

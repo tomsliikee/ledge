@@ -7,8 +7,9 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {parseDate} from '../lib/calendar.js';
-import {catalog} from '../lib/catalog.js';
+import {catalog, typeSizes} from '../lib/catalog.js';
 import * as Layout from '../lib/layout.js';
+import * as Stack from '../lib/stack.js';
 import {newSession, searchPlaces} from '../lib/sources/weather.js';
 import {styles} from '../lib/tokens.js';
 import {entry, group, item, itemButton, section, segments, switchItem} from './controls.js';
@@ -60,8 +61,13 @@ export class EditMode {
             return this.active;
         };
         manager.onSynced = () => {
-            if (this.active)
-                this._fill();
+            if (!this.active)
+                return;
+            // A stack was turned: what is selected is what shows.
+            const selected = this._widgets().find(widget => widget.id === this._selected);
+            if (selected?.stack && !selected.top)
+                this._selected = Stack.topOf(Stack.membersOf(this._widgets(), selected.stack)).id;
+            this._fill();
         };
     }
 
@@ -69,6 +75,7 @@ export class EditMode {
         if (this.active)
             return;
         this.active = true;
+        this._manager.arranging = true;
         this._manager.show(true);
         this._overlay.setEditPillVisible(false);
         this._place();
@@ -80,6 +87,7 @@ export class EditMode {
         if (!this.active)
             return;
         this.active = false;
+        this._manager.arranging = false;
         this._manager.targetMonitor = null;
         this._select(null);
         this._scroll.hide();
@@ -147,8 +155,18 @@ export class EditMode {
         if (selected) {
             add(section(`Selected: ${catalog[selected.type].title}`));
             add(this._selectedGroup(selected));
+            if (selected.stack) {
+                add(section('In this stack'));
+                add(group(Stack.membersOf(this._widgets(), selected.stack).map(member => {
+                    const out = iconButton('list-remove-symbolic', () => {
+                        this._store.widgets = Stack.leave(this._widgets(), member.id);
+                    }, {small: true, kind: 'quiet', label: `Take ${catalog[member.type].title} out of the stack`});
+                    return item(catalog[member.type].title, member.top ? 'Showing' : null, out);
+                })));
+                add(text('aside', {tone: 'muted', wrap: true, content: 'Turn the stack with the wheel or its dots. A widget taken out goes to a free spot.'}));
+            }
         } else {
-            add(text('label', {tone: 'muted', wrap: true, content: 'Drag a widget to move it. Click one to set it up.'}));
+            add(text('label', {tone: 'muted', wrap: true, content: 'Drag a widget to move it, or onto the middle of another to stack them. Click one to set it up.'}));
         }
 
         add(section('All widgets'));
@@ -235,10 +253,14 @@ export class EditMode {
             segments(choices, options[key], value => this._setOption(widget.id, {[key]: value})));
         const rows = [];
 
-        if (entry_.sizes.length > 1) {
+        // In a stack: the sizes all its widgets offer, set for all of them.
+        const offered = Stack.sharedSizes(this._widgets(), widget.id, typeSizes);
+        if (offered.length > 1) {
             rows.push(item('Size', null, segments(
-                ['small', 'medium', 'large'].filter(size => entry_.sizes.includes(size)).map(size => [size, SIZE_NAMES[size]]),
-                widget.size, size => this._update(widget.id, w => ({...w, size})))));
+                ['small', 'medium', 'large'].filter(size => offered.includes(size)).map(size => [size, SIZE_NAMES[size]]),
+                widget.size, size => {
+                    this._store.widgets = Stack.setShared(this._widgets(), widget.id, {size});
+                })));
         }
 
         if (widget.type === 'clock')

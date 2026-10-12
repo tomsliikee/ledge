@@ -18,7 +18,7 @@ test('unknown types and repeated ids are dropped', () => {
 
 test('missing fields get defaults and an unknown size the first one', () => {
     equal(Layout.parseLayout('[{"id":"c","type":"cpu","size":"large"}]', TYPES),
-        [{id: 'c', type: 'cpu', size: 'small', enabled: true, placed: true, monitor: null, x: 24, y: 24, options: {}}]);
+        [{id: 'c', type: 'cpu', size: 'small', enabled: true, placed: true, monitor: null, x: 24, y: 24, options: {}, stack: null, top: false}]);
 });
 
 test('a widget of a missing monitor shows on the primary one', () => {
@@ -46,7 +46,7 @@ const ENTRY = {sizes: ['medium', 'small'], defaults: {face: 'analog'}};
 
 test('switching a type on adds a widget in its first size', () => {
     const [widget] = Layout.setTypeEnabled([], 'clock', true, ENTRY, {monitor: 'eDP-1', x: 40, y: 48});
-    equal(widget, {id: 'clock-1', type: 'clock', size: 'medium', enabled: true, placed: true, monitor: 'eDP-1', x: 40, y: 48, options: {face: 'analog'}});
+    equal(widget, {id: 'clock-1', type: 'clock', size: 'medium', enabled: true, placed: true, monitor: 'eDP-1', x: 40, y: 48, options: {face: 'analog'}, stack: null, top: false});
 });
 
 test('a widget added without a position is left for the shell to place', () => {
