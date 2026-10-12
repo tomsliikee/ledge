@@ -7,6 +7,10 @@ import {parseLayout} from './layout.js';
 import {styles} from './tokens.js';
 import {parsePlace} from './weather.js';
 
+// The style whose colours are taken from the wallpaper while the shell runs.
+export const WALLPAPER_STYLE = 'wallpaper';
+export const allStyles = [...styles, WALLPAPER_STYLE];
+
 export class Store {
     constructor(settings) {
         this._settings = settings;
@@ -36,7 +40,7 @@ export class Store {
 
     get style() {
         const style = this._settings.get_string('style');
-        return styles.includes(style) ? style : styles[0];
+        return allStyles.includes(style) ? style : styles[0];
     }
 
     set style(style) {

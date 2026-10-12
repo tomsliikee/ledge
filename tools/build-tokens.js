@@ -71,25 +71,17 @@ export const type = ${JSON.stringify(type, null, 4)};
 
 const template = fs.readFileSync(path.join(__dirname, 'stylesheet.template.css'), 'utf8');
 
-function rgba(hex, percent) {
-    const value = Number.parseInt(hex.slice(1), 16);
-    return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${percent / 100})`;
-}
-
-// $token is a size or a colour; $token@80 is that colour at 80 % opacity.
-function expand(css, scheme) {
-    return css.replace(/\$([a-z0-9-]+)(?:@(\d+))?/g, (_, name, alpha) => {
-        if (name in sizes)
-            return `${sizes[name]}px`;
-        if (!(name in colors[scheme]))
-            throw new Error(`Unknown token in the template: ${name}`);
-        return alpha ? rgba(colors[scheme][name], Number(alpha)) : colors[scheme][name];
-    });
-}
-
 // Rules above the marker carry no colour and are written once.
 const [shared, themed] = template.split('/* themed */');
-const sheets = Object.keys(colors).map(scheme =>
-    expand(themed.replace(/\.lg-root/g, `.lg-root-${scheme}`), scheme).trim());
-fs.writeFileSync(path.join(root, 'extension', 'stylesheet.css'),
-    `${header.replace('//', '/*').replace('\n', ' */\n')}\n${expand(shared, Object.keys(colors)[0]).trim()}\n\n${sheets.join('\n\n')}\n`);
+
+// The coloured rules also go into the extension as they are, for the style
+// that is derived from the wallpaper while it runs.
+fs.writeFileSync(path.join(root, 'extension', 'lib', 'template.js'),
+    `${header}\nexport const themed = ${JSON.stringify(themed)};\n`);
+
+// The same code fills the template in here and in the running extension.
+import('../extension/lib/sheet.js').then(({expand, schemeSheet}) => {
+    const sheets = Object.keys(colors).map(scheme => schemeSheet(themed, scheme, sizes, colors[scheme]));
+    fs.writeFileSync(path.join(root, 'extension', 'stylesheet.css'),
+        `${header.replace('//', '/*').replace('\n', ' */\n')}\n${expand(shared, sizes).trim()}\n\n${sheets.join('\n\n')}\n`);
+});

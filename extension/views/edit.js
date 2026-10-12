@@ -11,7 +11,7 @@ import {catalog, typeSizes} from '../lib/catalog.js';
 import * as Layout from '../lib/layout.js';
 import * as Stack from '../lib/stack.js';
 import {newSession, searchPlaces} from '../lib/sources/weather.js';
-import {styles} from '../lib/tokens.js';
+import {allStyles} from '../lib/store.js';
 import {entry, group, item, itemButton, section, segments, switchItem} from './controls.js';
 import * as Monitors from './monitors.js';
 import {LAYOUT_MS, ease} from './motion.js';
@@ -181,7 +181,7 @@ export class EditMode {
         add(section('Look'));
         const swatches = new St.BoxLayout({style_class: 'lg-swatches', y_align: CENTER});
         const scheme = theme.split('-')[1];
-        for (const style of styles) {
+        for (const style of allStyles) {
             const swatch = new Swatch({style, theme: scheme});
             swatch.setSelected(style === this._store.style);
             const button = new St.Button({style_class: 'lg-swatch', child: swatch, can_focus: true, accessible_name: style});
@@ -191,7 +191,7 @@ export class EditMode {
             swatches.add_child(button);
         }
         add(group([
-            item('Colour', null, swatches),
+            item('Colour', this._store.style === 'wallpaper' ? 'Taken from the wallpaper.' : null, swatches),
             switchItem('Expressive', 'Tiles in the tones of the colour scheme, and values on shapes that grow with them.', theme, this._store.expressive,
                 on => {
                     this._store.expressive = on;

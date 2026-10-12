@@ -14,8 +14,7 @@ import {fromBackup, toBackup} from './lib/backup.js';
 import {catalog, typeSizes} from './lib/catalog.js';
 import * as Layout from './lib/layout.js';
 import {newSession, searchPlaces} from './lib/sources/weather.js';
-import {Store} from './lib/store.js';
-import {styles} from './lib/tokens.js';
+import {Store, allStyles} from './lib/store.js';
 
 const SCREENS = ['own', 'mirror', 'primary'];
 const capitalised = word => word[0].toUpperCase() + word.slice(1);
@@ -52,11 +51,11 @@ function lookGroup(store) {
     const group = new Adw.PreferencesGroup({title: 'Look'});
     const style = new Adw.ComboRow({
         title: 'Colour',
-        model: Gtk.StringList.new(styles.map(capitalised)),
+        model: Gtk.StringList.new(allStyles.map(style => style === 'wallpaper' ? 'From the wallpaper' : capitalised(style))),
     });
     style.connect('notify::selected', () => {
-        if (styles[style.selected] !== store.style)
-            store.style = styles[style.selected];
+        if (allStyles[style.selected] !== store.style)
+            store.style = allStyles[style.selected];
     });
     const expressive = new Adw.SwitchRow({
         title: 'Expressive',
@@ -98,7 +97,7 @@ function lookGroup(store) {
     group.add(screens);
     const refresh = () => {
         screens.selected = SCREENS.indexOf(store.screens);
-        style.selected = styles.indexOf(store.style);
+        style.selected = allStyles.indexOf(store.style);
         expressive.active = store.expressive;
         translucent.active = store.translucent;
         animations.active = store.animations;
@@ -298,7 +297,7 @@ function backupGroup(store, window) {
             let settings = null;
             try {
                 const [, contents] = dialog.open_finish(result).load_contents(null);
-                settings = fromBackup(new TextDecoder().decode(contents), typeSizes, styles);
+                settings = fromBackup(new TextDecoder().decode(contents), typeSizes, allStyles);
             } catch (e) {
                 if (e.matches?.(Gtk.DialogError, Gtk.DialogError.DISMISSED))
                     return;

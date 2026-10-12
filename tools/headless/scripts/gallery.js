@@ -31,6 +31,7 @@ const PAGES = {
         ['timer', 'small'], ['timer', 'small', {mode: 'stopwatch'}], ['note', 'small', {text: 'Call the plumber about the tap.'}],
         ['daylight', 'small'], ['countdown', 'small', {title: 'Holiday', date: '2026-12-24'}], ['photo', 'small'],
         ['countdown', 'small'], ['note', 'small'],
+        ['pomodoro', 'small'], ['air', 'small'], ['volume', 'small'], ['brightness', 'small'],
     ],
     medium: [
         ['clock', 'medium'], ['clock', 'medium', {face: 'digital'}], ['calendar', 'medium'], ['weather', 'medium'],
@@ -46,6 +47,9 @@ const PAGES = {
     large2: [
         ['note', 'large', {text: 'Things for the weekend\n\nBread, coffee, lemons\nReturn the library books\nOil the bike chain'}],
         ['photo', 'large'], ['timer', 'medium', {mode: 'stopwatch'}], ['note', 'medium', {text: 'A wider note.'}],
+        ['tasks', 'large', {items: [{text: 'Bread and coffee', done: false}, {text: 'Call the plumber', done: true}]}],
+        ['tasks', 'medium'], ['pomodoro', 'medium'], ['air', 'medium'], ['events', 'medium'], ['events', 'large'],
+        ['volume', 'medium'], ['brightness', 'medium'],
     ],
 };
 
@@ -61,7 +65,7 @@ export default async function ({manager, store, shot, sleep, desktop, background
             for (const [page, items] of Object.entries(PAGES)) {
                 store.widgets = pack(items.map(([type, size, options]) =>
                     [type, size, type === 'photo' ? {folder: pictures} : options]), 1600);
-                await sleep(first ? 9000 : 6500);
+                await sleep(first ? 9000 : 5000);
                 first = false;
                 await shot(`${expressive ? 'expressive' : 'calm'}-${scheme === 'default' ? 'light' : 'dark'}-${page}`);
             }

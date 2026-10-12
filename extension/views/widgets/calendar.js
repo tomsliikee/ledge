@@ -31,24 +31,36 @@ function sheet(now, cell) {
 }
 
 function build(ctx) {
-    const day = text('label', {tone: 'accent'});
-    const month = text('label', {tone: 'muted'});
+    const large = ctx.size === 'large';
     const title = text('title');
-    // In the expressive look the day stands on a clover in the tile's tone.
-    const mark = ctx.expressive
-        ? badge({size: 84, theme: ctx.theme, role: 'metric-l', accent: ctx.accent, mood: 'soft'})
-        : null;
-    mark?.show(0.5, 'primary');
-    const number = mark ? mark.label : text('metric-xl');
-    const date = column({gap: 'lg-stack', y: CENTER, children: [day, mark ? mark.actor : number, month]});
     const holder = new St.Bin({x_expand: true, y_expand: true});
+    // The large sheet has no room for the day on its own, so its parts are
+    // not made: an actor without a parent is never destroyed.
+    let date = null;
+    let showDate = () => {};
+    if (!large) {
+        const day = text('label', {tone: 'accent'});
+        const month = text('label', {tone: 'muted'});
+        // In the expressive look the day stands on a clover in the tile's tone.
+        const mark = ctx.expressive
+            ? badge({size: 84, theme: ctx.theme, role: 'metric-l', accent: ctx.accent, mood: 'soft'})
+            : null;
+        mark?.show(0.5, 'primary');
+        const number = mark ? mark.label : text('metric-xl');
+        date = column({gap: 'lg-stack', y: CENTER, children: [day, mark ? mark.actor : number, month]});
+        showDate = now => {
+            day.text = WEEKDAYS_LONG[weekday(now)];
+            number.text = String(now.getDate());
+            month.text = MONTHS[now.getMonth()];
+        };
+    }
 
     let actor = date;
     if (ctx.size === 'medium') {
         date.x_expand = false;
         date.width = 96;
         actor = row({gap: 'lg-row', children: [date, holder]});
-    } else if (ctx.size === 'large') {
+    } else if (large) {
         actor = column({gap: 'lg-column-wide', children: [title, holder]});
     }
 
@@ -59,12 +71,10 @@ function build(ctx) {
         if (key === shown)
             return;
         shown = key;
-        day.text = WEEKDAYS_LONG[weekday(now)];
-        number.text = String(now.getDate());
-        month.text = MONTHS[now.getMonth()];
+        showDate(now);
         title.text = `${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
         if (ctx.size !== 'small')
-            holder.set_child(sheet(now, ctx.size === 'large' ? 36 : 21));
+            holder.set_child(sheet(now, large ? 36 : 21));
     });
     return {actor};
 }

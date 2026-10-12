@@ -14,6 +14,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {STARTERS, catalog, typeSizes} from '../lib/catalog.js';
 import * as Layout from '../lib/layout.js';
 import {snap} from '../lib/snap.js';
+import {WALLPAPER_STYLE} from '../lib/store.js';
 import * as Stack from '../lib/stack.js';
 import {coveredMonitors, mayShow} from '../lib/visibility.js';
 import * as Monitors from './monitors.js';
@@ -21,6 +22,7 @@ import {LAYOUT_MS, STATE_MS, ease, setMotion} from './motion.js';
 import {Overlay} from './overlay.js';
 import {pressedControl} from './parts.js';
 import {Tile} from './tile.js';
+import {WallpaperStyle} from './wallpaper.js';
 import {builders} from './widgets/index.js';
 
 // A press that moves less than this is a click, not a drag.
@@ -103,6 +105,12 @@ export class Manager {
         });
 
         // Colours first: a tile cannot be built before its theme is known.
+        this._wallpaper = new WallpaperStyle({onChange: () => {
+            if (this._store.style === WALLPAPER_STYLE)
+                this._restyle();
+            else
+                this._onSynced?.();
+        }});
         this._restyle();
         if (!store.hasLayout)
             store.widgets = this._starters();
@@ -590,5 +598,6 @@ export class Manager {
         this._tiles.clear();
         this._overlay.destroy();
         this._desktop.destroy();
+        this._wallpaper.destroy();
     }
 }

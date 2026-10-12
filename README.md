@@ -1,6 +1,6 @@
 <div align="center">
   <h1>Ledge</h1>
-  <p><strong>Desktop widgets for GNOME Shell in the manner of macOS: a clock, the load of the machine, the weather and nineteen more, placed freely on the desktop and shown over the windows from the top bar.</strong></p>
+  <p><strong>Desktop widgets for GNOME Shell in the manner of macOS: a clock, the load of the machine, the weather and twenty-three more, placed freely on the desktop and shown over the windows from the top bar.</strong></p>
 
   <p>
     <img src="https://img.shields.io/badge/Platform-GNOME%20Shell%2050-neutral?style=flat-square" alt="Platform" />
@@ -8,7 +8,7 @@
     <img src="https://img.shields.io/badge/Language-GJS%20(ES%20modules)-neutral?style=flat-square" alt="Language" />
     <img src="https://img.shields.io/badge/Design-Toms%20Expressive%20Design-neutral?style=flat-square" alt="Design Language" />
     <img src="https://img.shields.io/badge/Weather-Open--Meteo-neutral?style=flat-square" alt="Weather Source" />
-    <img src="https://img.shields.io/badge/Dependencies-None-neutral?style=flat-square" alt="No Dependencies" />
+    <img src="https://img.shields.io/badge/Dependencies-None-neutral?style=flat-square" alt="No Dependencies to Install" />
     <img src="https://img.shields.io/badge/Telemetry-None-neutral?style=flat-square" alt="No Telemetry" />
     <img src="https://img.shields.io/badge/License-MIT-neutral?style=flat-square" alt="License" />
   </p>
@@ -30,7 +30,7 @@ The values in the screenshots are those of the laptop they were taken on; the we
 
 ## Features
 
-- **Twenty-Two Widgets:** Time, load, weather, media and small tools; the full list is below.
+- **Twenty-Six Widgets:** Time, load, weather, media and small tools; the full list is below.
 - **Three Sizes:** **Small** (160 px square), **medium** (twice as wide) and **large** (twice as wide and high). Each size has a layout of its own.
 - **Free Placement:** Drag a widget anywhere. On release it rests on an **8 px grid**, or flush with a neighbour when one of its edges is near.
 - **Look and Hold:** Rest the pointer on the top bar icon and the widgets appear over the windows for as long as it stays. A click holds them there and makes them usable.
@@ -40,7 +40,7 @@ The values in the screenshots are those of the laptop they were taken on; the we
 - **Arranging Mode:** A panel in the same design switches widgets on and off, sets up the one you clicked, and chooses colour, see-through and motion.
 - **Several Screens:** Each screen has **its own** widgets, or all widgets are **mirrored** on every screen, or they show on the **main screen only**.
 - **Two Looks:** **Expressive**, with tiles in the tones of the colour scheme and values on shapes that grow with them, or **calm**, with neutral tiles and colour only in rings and lines. One switch changes all widgets.
-- **Five Colour Styles:** **Blue**, **violet**, **green**, **orange** and **pink**, each in light and dark, following the system's colour scheme.
+- **Five Colour Styles and the Wallpaper's:** **Blue**, **violet**, **green**, **orange** and **pink**, each in light and dark, following the system's colour scheme. A sixth style takes its colours **from the wallpaper** and changes with it.
 - **Motion With a Switch:** A second hand, rings that glide to a new value, widgets that rise when they appear. One switch turns all of it off.
 - **Carried Along:** The arrangement, the look and the place of the weather are saved to one file and loaded on another machine.
 - **Quiet When Unseen:** Readings stop behind maximised windows, in the overview and after **20 minutes** without input; on battery every interval doubles.
@@ -57,6 +57,8 @@ The values in the screenshots are those of the laptop they were taken on; the we
 | **Calendar** | S M L | Today's date and the sheet of the month | System clock |
 | **Weather** | S M L | Now, the next hours and five days for one place | **Open-Meteo** |
 | **Daylight** | S M | Sunrise, sunset and where the sun stands | The same forecast |
+| **Air** | S M | The European air quality index, fine dust and the strongest pollen | **Open-Meteo** air quality |
+| **Up next** | M L | The calendar's entries of the coming week | The entries GNOME Shell holds for its date menu |
 | **Performance** | M L | Processor, graphics card, memory and temperature together | See below |
 | **CPU** | S M | Share of processor time in use, with its recent course | **`/proc/stat`** |
 | **GPU** | S M | Load of the graphics card; on Intel graphics its clock frequency | **`nvidia-smi`** or **`/sys/class/drm`** |
@@ -66,6 +68,8 @@ The values in the screenshots are those of the laptop they were taken on; the we
 | **Network** | S M | Download and upload per second | **`/proc/net/dev`** |
 | **Storage** | S M | How full the disks are | File system information |
 | **Battery** | S M | Charge and time left; stays away without a battery | **UPower** |
+| **Volume** | S M | Loudness of the sound output, with a slider and mute | GNOME Shell's sound control |
+| **Brightness** | S M | Brightness of the screen, with a slider; stays away where no screen can be dimmed | GNOME Shell's brightness control |
 | **Now playing** | S M L | Title, artist, cover and controls of what a player plays | **MPRIS** on the session bus |
 | **Tally** | S M | Session and week limits of a Claude plan | The cache of the [**Tally**](https://github.com/tomsliikee/tally) extension |
 | **World clock** | S M L | The time in up to six cities and how far ahead they are | System time zones |
@@ -78,6 +82,8 @@ The values in the screenshots are those of the laptop they were taken on; the we
 
 - **More Than One:** Clock, timer, pomodoro, countdown, note, tasks and photo can be added several times, each with its own settings.
 - **GPU, Honestly:** **NVIDIA** cards report their load through `nvidia-smi`, **AMD** cards through `gpu_busy_percent`. **Intel** graphics report no load without extra rights, so the widget shows where the clock frequency stands between its lowest and highest, and labels it **GPU clock**.
+- **Pollen Only in Europe:** Open-Meteo has pollen counts for Europe; elsewhere the Air widget shows the index and the dust alone. The words for a pollen count (low, moderate, high) are rough bands, not medical advice.
+- **Up Next Sees What the Shell Sees:** The calendar service keeps one span of time for everyone who asks, so Ledge asks for none and reads what the shell has loaded: the weeks shown in the date menu. An entry beyond them does not show, and while another month is open in the date menu the widget may be empty.
 - **Notes and Tasks Are Written While Held:** Text can only be typed while the widgets are held over the windows; on the bare desktop the keyboard belongs to the focused window.
 
 ---
@@ -125,8 +131,9 @@ A source runs only while a widget that needs it can be seen, and several widgets
 | **Clock** | Once a minute; once a second with a second hand | Same |
 | **Storage** | 60 s | 120 s |
 | **Weather** | 30 min | 60 min |
+| **Air** | 60 min | 120 min |
 | **Photo** | 60 min | 120 min |
-| **Battery, media, Tally's limits** | Only when they change | Same |
+| **Battery, media, Tally's limits, calendar, volume, brightness** | Only when they change | Same |
 
 - **Unseen Means Stopped:** A maximised or full-screen window on a screen stops the widgets of that screen. So do the overview and **20 minutes** without keyboard or pointer input. On the lock screen GNOME switches the extension off.
 - **Measured:** In a headless GNOME Shell on an **Intel Core i5-8350U**, the four starting widgets cost about **1.8 %** of one core with motion and **0.8 %** without; with nothing in view the shell stayed at its own **0.25 %**. A real screen was not measured.
@@ -139,6 +146,7 @@ A source runs only while a widget that needs it can be seen, and several widgets
 | Request | Sent | When |
 | :--- | :--- | :--- |
 | **Forecast** from `api.open-meteo.com` | The coordinates of the chosen place, to three decimals | While a weather or daylight widget can be seen, every 30 minutes |
+| **Air quality** from `air-quality-api.open-meteo.com` | The same coordinates | While an Air widget can be seen, every 60 minutes |
 | **Place search** at `geocoding-api.open-meteo.com` | What you type into the search | When you search |
 | **Cover art** | A request to the address a media player gives for its cover | When that player's song changes and the address is on the web |
 
@@ -155,6 +163,7 @@ The interface is built with **Toms Expressive Design**, the design system in **`
 - **Numbers Lead:** A large number, a quiet label that says what it is, and at most one sentence beside it.
 - **Type With a Voice:** **Google Sans Flex**, a variable font. Numbers are heavy and wide, labels narrow and quiet.
 - **Status Colours Mean Something:** A ring turns to the warning colour from **75 %** and to the error colour from **90 %**; a battery does so when it runs low.
+- **A Style From the Wallpaper:** The picture is reduced to 64 px, its colours to a few, and the one that carries it becomes the seed of a scheme, derived the way the five fixed styles were. A wallpaper that changes through the day changes the colours with it. Without a picture the wallpaper's plain colour is the seed.
 - **Generated, Not Typed:** `tools/build-tokens.js` writes the stylesheet and the colour values from **`toms-expressive-design/tokens.json`**. The one colour written by hand is the scrim behind held widgets, for which the tokens have no role.
 
 ![The same widgets in the calm look](readmestuff/calm.png)
@@ -200,7 +209,7 @@ node tools/build-tokens.js
 
 ## How It Works
 
-Three layers: **sources** that read, **pure logic** that runs outside the shell and is covered by **89** unit tests, and **views** drawn with **St** and **Cairo**.
+Three layers: **sources** that read, **pure logic** that runs outside the shell and is covered by **108** unit tests, and **views** drawn with **St** and **Cairo**.
 
 ```mermaid
 flowchart TD
@@ -212,6 +221,7 @@ flowchart TD
         Tile["Tile & Widgets<br/><b>One File per Kind of Widget</b>"]
         Marks["Marks<br/><b>Ring, Dial, Spark, Meter, SunArc, Switch</b>"]
         Prefs["prefs.js<br/><b>Settings Window, Own Process</b>"]
+        Wallpaper["WallpaperStyle<br/><b>Reads the Wallpaper, Writes Its Stylesheet</b>"]
     end
 
     subgraph State ["State"]
@@ -225,11 +235,13 @@ flowchart TD
         System["system.js, gpu.js<br/><b>/proc, /sys, nvidia-smi</b>"]
         Helper["helpers/processes.js<br/><b>Own Process</b>"]
         Local["local.js, media.js, time.js<br/><b>Disks, Tally's Cache, Photos, MPRIS</b>"]
-        Weather["weather.js<br/><b>Open-Meteo</b>"]
+        Shell["shell.js<br/><b>Calendar, Volume, Brightness From the Shell</b>"]
+        Weather["weather.js<br/><b>Open-Meteo: Forecast, Air Quality</b>"]
     end
 
     subgraph Logic ["Pure Logic"]
-        Parse["parse.js, weather.js, claude.js<br/><b>Readings to Numbers</b>"]
+        Parse["parse.js, weather.js, air.js, agenda.js, claude.js<br/><b>Readings to Numbers</b>"]
+        Scheme["scheme.js, slideshow.js, sheet.js<br/><b>Colours From a Picture</b>"]
         Layout["layout.js, snap.js, stack.js, visibility.js<br/><b>Places, Snapping, Stacks, What Shows</b>"]
         Format["format.js, calendar.js, zones.js, timer.js, pomodoro.js, tasks.js<br/><b>Units, Dates, Time Zones, Rounds, Lists</b>"]
         Catalog["catalog.js<br/><b>The Widgets and Their Sizes</b>"]
@@ -250,6 +262,9 @@ flowchart TD
     Store --> Catalog
     Hub --> System
     Hub --> Local
+    Hub --> Shell
+    Manager --> Wallpaper
+    Wallpaper --> Scheme
     Hub --> Weather
     Hub --> Power
     System --> Helper
@@ -264,6 +279,7 @@ flowchart TD
 | :--- | :--- |
 | **dconf, `/org/gnome/shell/extensions/ledge/`** | The widgets with their places, sizes, stacks and settings; colour, look, see-through, motion, screens, the shortcut and the place for the weather |
 | **`~/.cache/ledge/thumbs/`** | Photos and covers cut to the size of their widget |
+| **`~/.cache/ledge/wallpaper.css`** | The stylesheet of the style taken from the wallpaper |
 | **`~/.cache/tally/`** | Tally's records of the Claude limits. Read only |
 
 ---
@@ -277,8 +293,8 @@ flowchart TD
 
 | Part | State | How |
 | :--- | :--- | :--- |
-| **Parsing, formatting, layout, snapping, stacks, time zones, timer, pomodoro, tasks, backup** | *tested* | 89 unit tests |
-| **All twenty-two widgets, every size, light and dark, both looks** | *tested* | Rendered in a headless GNOME Shell 50.5 with this laptop's real readings. The warning and error colours on shapes were not seen: no reading was that high |
+| **Parsing, formatting, layout, snapping, stacks, time zones, timer, pomodoro, tasks, backup, air, agenda, colour schemes** | *tested* | 108 unit tests |
+| **All twenty-six widgets, every size, light and dark, both looks** | *tested* | Rendered in a headless GNOME Shell 50.5 with this laptop's real readings. The warning and error colours on shapes were not seen: no reading was that high |
 | **Weather** | *tested* | A real forecast for Vienna from Open-Meteo on 2026-10-12. The place search was not run from the panel |
 | **Dragging and snapping** | *tested* | With a virtual pointer in the headless shell; the stored place lay on the grid |
 | **Look on hover, hold on click, menu on secondary click** | *tested* | With a virtual pointer, over a maximised window |
@@ -290,6 +306,11 @@ flowchart TD
 | **Shortcut** | *tested* | Super+W from a virtual keyboard held the widgets and let them go; with none set nothing happened. Recording another combination in the settings window was not tried |
 | **Click opens the app** | *tested* | A click on the held calendar started GNOME Calendar; not while arranging, not with the switch off |
 | **Tasks and Pomodoro** | *tested* | A task ticked off with the pointer and one added through the field; a round started by its button. A phase running to its end was only tested as logic |
+| **Air** | *tested* | A real answer for Vienna on 2026-10-12. An index high enough for the warning colours was not seen |
+| **Up next** | *tested* | With a calendar stood in for: entries by day, a change of the calendar, and no listener left behind. With the real source of a shell without accounts it showed that nothing is ahead. Real calendar accounts were not tried |
+| **Volume** | *built* | Read the real output device in the headless shell. Setting the loudness and muting were not tried, so as not to change the sound of the machine |
+| **Brightness** | *tested* | With the shell's scale stood in for: dragged with the pointer, turned with the wheel, pressed while held. The headless shell has no screen to dim; a real backlight was not tried |
+| **Colours from the wallpaper** | *tested* | The library in the extension gives the same colours as the four derived styles that ship. In the headless shell: a plain colour, a picture for each scheme, a wallpaper that changes through the day, a missing picture. A real wallpaper was only read outside the shell |
 | **Stepping aside on battery** | *tested* | With the battery stood in for: the widget left, its source stopped, and both returned |
 | **Saving and loading the arrangement** | *built* | The file's content is unit tested; the two dialogs were not clicked |
 | **Switching off and on** | *tested* | Disabled and enabled in the running shell without an error |
@@ -299,12 +320,14 @@ flowchart TD
 | **Motion** | *built* | Runs without errors; not watched on a real screen |
 | **Typing a note** | *built* | Rendered with text; typing needs a real keyboard |
 
-Ledge places its widgets in the shell's background group, which is not a public interface of GNOME Shell and may change with a new version.
+Ledge places its widgets in the shell's background group, which is not a public interface of GNOME Shell and may change with a new version. The same holds for the three readings it takes from the shell: the date menu's calendar entries, the sound control and the brightness control. Those are kept in one file, `extension/lib/sources/shell.js`.
 
 ---
 
 ## License
 
 **Ledge** is released under the [**MIT License**](LICENSE).
+
+**`extension/lib/vendor/material-color-utilities`** holds a part of Google's **material-color-utilities** (version 0.4.0) under the **Apache License 2.0**; what was changed is listed in the README beside it.
 
 The font in **`toms-expressive-design/fonts`**, **Google Sans Flex**, is the work of the Google Sans Flex Authors and comes under the **SIL Open Font License 1.1**; its text is in [`toms-expressive-design/fonts/OFL.txt`](toms-expressive-design/fonts/OFL.txt).
