@@ -13,7 +13,9 @@ const NO_ANSWER = 'The weather could not be loaded.';
 
 // Shows the hint instead of the content until there is a forecast.
 function withForecast(ctx, content, show) {
-    const message = hint(NO_PLACE);
+    // Empty until the first reading: nothing is known yet, not even that a
+    // place is missing.
+    const message = hint('');
     const actor = column({children: [message, content]});
     content.visible = false;
     ctx.watch('weather', data => {
@@ -187,7 +189,9 @@ function buildAir(ctx) {
         ? column({gap: 'lg-stack', children: [place, mark.actor]})
         : row({gap: 'lg-row-wide', children: [mark.actor, column({gap: 'lg-stack', y: CENTER, children: [place, name, dust, pollen]})]});
     content.visible = false;
-    const message = hint(NO_PLACE);
+    // Empty until the first reading: nothing is known yet, not even that a
+    // place is missing.
+    const message = hint('');
     ctx.watch('air', data => {
         const ready = Boolean(data.air);
         content.visible = ready;

@@ -8,7 +8,7 @@
     <img src="https://img.shields.io/badge/Language-GJS%20(ES%20modules)-neutral?style=flat-square" alt="Language" />
     <img src="https://img.shields.io/badge/Design-Toms%20Expressive%20Design-neutral?style=flat-square" alt="Design Language" />
     <img src="https://img.shields.io/badge/Weather-Open--Meteo-neutral?style=flat-square" alt="Weather Source" />
-    <img src="https://img.shields.io/badge/Dependencies-None-neutral?style=flat-square" alt="No Dependencies to Install" />
+    <img src="https://img.shields.io/badge/Dependencies-None%20to%20install-neutral?style=flat-square" alt="No Dependencies to Install" />
     <img src="https://img.shields.io/badge/Telemetry-None-neutral?style=flat-square" alt="No Telemetry" />
     <img src="https://img.shields.io/badge/License-MIT-neutral?style=flat-square" alt="License" />
   </p>
@@ -85,6 +85,10 @@ The values in the screenshots are those of the laptop they were taken on; the we
 - **Pollen Only in Europe:** Open-Meteo has pollen counts for Europe; elsewhere the Air widget shows the index and the dust alone. The words for a pollen count (low, moderate, high) are rough bands, not medical advice.
 - **Up Next Sees What the Shell Sees:** The calendar service keeps one span of time for everyone who asks, so Ledge asks for none and reads what the shell has loaded: the weeks shown in the date menu. An entry beyond them does not show, and while another month is open in the date menu the widget may be empty.
 - **Notes and Tasks Are Written While Held:** Text can only be typed while the widgets are held over the windows; on the bare desktop the keyboard belongs to the focused window.
+
+![The calendar's coming week, tasks, a pomodoro, the air, brightness and a stack of three](readmestuff/more.png)
+
+In this picture the calendar entries and the brightness are stood in for: the shell it was taken in has no calendar account and no screen to dim.
 
 ---
 
