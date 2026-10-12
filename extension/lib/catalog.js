@@ -32,6 +32,8 @@ export const catalog = {
     battery: entry('Battery', 'Charge and time left. Stays away on a machine without a battery.', COMPACT, {tone: 'secondary', opens: ['gnome-power-panel']}),
     network: entry('Network', 'Download and upload per second, over all real network interfaces.', COMPACT, {opens: MONITOR}),
     disk: entry('Storage', 'How full the disks are.', COMPACT, {tone: 'tertiary', opens: ['org.gnome.baobab']}),
+    volume: entry('Volume', 'How loud the sound output is, with a slider and a mute button.', COMPACT, {tone: 'tertiary'}),
+    brightness: entry('Brightness', 'How bright the screen is, with a slider. Stays away where no screen can be dimmed.', COMPACT, {tone: 'secondary'}),
     media: entry('Now playing', 'The song a player is playing, with its controls.', ['medium', 'small', 'large'], {tone: 'tertiary', opens: ['player']}),
     claude: entry('Tally', 'The session and week limits of your plan, as the Tally extension recorded them. Asks nothing itself.', ['medium', 'small'], {tone: 'primary'}),
     worldclock: entry('World clock', 'The time in other cities, and how far ahead or behind they are.', ['medium', 'small', 'large'],

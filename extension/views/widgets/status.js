@@ -3,7 +3,8 @@
 import * as Format from '../../lib/format.js';
 import {Meter} from '../meter.js';
 import {Glide} from '../motion.js';
-import {CENTER, column, gauge, hint, icon, row} from '../parts.js';
+import {CENTER, column, gauge, hint, icon, iconButton, row} from '../parts.js';
+import {Slider} from '../slider.js';
 import {Spark} from '../spark.js';
 import {setTone, text} from '../text.js';
 import {WavyProgress} from '../wavy.js';
@@ -187,3 +188,47 @@ function buildClaude(ctx) {
 }
 
 export const claude = buildClaude;
+
+// Loudness and screen brightness: a number and the slider that sets it.
+// read turns a reading into {name, level, dimmed, icon}.
+function levelWidget(key, read, onPress = null) {
+    return ctx => {
+        const name = text('label', {tone: 'muted', expand: true});
+        const value = text(ctx.size === 'small' ? 'metric-l' : 'metric-s');
+        const slider = new Slider({theme: ctx.theme, accent: ctx.accent, onChange: level => {
+            value.text = Format.percent(100 * level);
+            ctx.act(key, `set:${level.toFixed(3)}`);
+        }});
+        const symbol = onPress
+            ? iconButton('audio-volume-high-symbolic', () => ctx.act(key, onPress), {kind: 'quiet', small: ctx.size === 'small', label: 'Mute'})
+            : icon('display-brightness-symbolic', 20);
+        const actor = ctx.size === 'small'
+            ? column({y: CENTER, children: [row({children: [name, symbol]}), value, slider]})
+            : column({y: CENTER, children: [row({children: [symbol, name, value]}), slider]});
+        ctx.watch(key, data => {
+            // A machine without this to set shows no widget for it.
+            ctx.hide(!data.available);
+            if (!data.available)
+                return;
+            const reading = read(data);
+            name.text = reading.name;
+            value.text = reading.dimmed ? 'Muted' : Format.percent(100 * reading.level);
+            slider.set(reading.level, reading.dimmed);
+            if (onPress)
+                symbol.child.icon_name = reading.icon;
+        });
+        return {actor};
+    };
+}
+
+function volumeIcon({level, muted}) {
+    if (muted || level <= 0)
+        return 'audio-volume-muted-symbolic';
+    return level < 0.34 ? 'audio-volume-low-symbolic' : level < 0.67 ? 'audio-volume-medium-symbolic' : 'audio-volume-high-symbolic';
+}
+
+export const volume = levelWidget('volume', data => ({
+    name: data.name || 'Volume', level: data.level, dimmed: data.muted, icon: volumeIcon(data),
+}), 'mute');
+
+export const brightness = levelWidget('brightness', data => ({name: 'Brightness', level: data.level, dimmed: false}));
