@@ -6,6 +6,7 @@ import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
+import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
@@ -419,7 +420,9 @@ export class Manager {
         drag.tile.disconnect(drag.release);
         this._ghost.hide();
         if (!drag.moved) {
-            this._onTileClicked?.(drag.tile);
+            // While arranging a click selects; otherwise it opens the app.
+            if (!this._onTileClicked?.(drag.tile))
+                this._open(drag.tile);
             return Clutter.EVENT_STOP;
         }
         const target = this._target(drag.tile, drag.tile.x, drag.tile.y);
@@ -437,6 +440,25 @@ export class Manager {
         return Clutter.EVENT_STOP;
     }
 
+    // Opens the app that belongs to a widget, if there is one installed.
+    _open(tile) {
+        if (!this._store.openApps)
+            return;
+        for (const name of catalog[tile.widget.type].opens) {
+            if (name === 'player') {
+                this._hub.act('media', 'Raise');
+            } else {
+                const app = Shell.AppSystem.get_default().lookup_app(`${name}.desktop`);
+                if (!app)
+                    continue;
+                app.activate();
+            }
+            this.hide();
+            return;
+        }
+    }
+
+    // callback returns true when it took the click.
     set onTileClicked(callback) {
         this._onTileClicked = callback;
     }

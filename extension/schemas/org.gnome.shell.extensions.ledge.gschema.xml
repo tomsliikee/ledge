@@ -38,5 +38,14 @@
       <summary>The place for the weather</summary>
       <description>JSON of {name, region, latitude, longitude, timezone}, as chosen from the search.</description>
     </key>
+    <key name="toggle-shortcut" type="as">
+      <default><![CDATA[['<Super>w']]]></default>
+      <summary>Keys that show the widgets over the windows</summary>
+      <description>Pressed once the widgets are held over the windows, pressed again they go back. Empty for none.</description>
+    </key>
+    <key name="open-apps" type="b">
+      <default>true</default>
+      <summary>A click on a widget opens the app that belongs to it</summary>
+    </key>
   </schema>
 </schemalist>

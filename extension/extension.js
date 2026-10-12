@@ -1,3 +1,6 @@
+import Meta from 'gi://Meta';
+import Shell from 'gi://Shell';
+
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
@@ -14,6 +17,7 @@ import {disposeThumbs} from './views/thumb.js';
 const IDLE_AFTER_MS = 20 * 60 * 1000;
 // On battery every source reads half as often.
 const BATTERY_PACE = 2;
+const SHORTCUT = 'toggle-shortcut';
 
 export default class LedgeExtension extends Extension {
     enable() {
@@ -33,10 +37,20 @@ export default class LedgeExtension extends Extension {
         this._manager = new Manager({store: this._store, hub: this._hub, idle: this._idle});
         this._edit = new EditMode({manager: this._manager, store: this._store});
 
+        const hold = () => this._manager.overlay.pinned ? this._manager.hide() : this._manager.show(true);
+        // Also while the widgets are held, so the same keys let them go.
+        Main.wm.addKeybinding(SHORTCUT, this.getSettings(), Meta.KeyBindingFlags.IGNORE_AUTOREPEAT,
+            Shell.ActionMode.NORMAL | Shell.ActionMode.SYSTEM_MODAL, () => {
+                // Another dialog owns the screen: not the moment for widgets.
+                if (Main.modalCount > 0 && !this._manager.overlay.pinned)
+                    return;
+                hold();
+            });
+
         this._indicator = new Indicator({
             iconPath: `${this.path}/icons/ledge-symbolic.svg`,
             onPeek: show => show ? this._manager.show(false) : this._manager.hide(true),
-            onHold: () => this._manager.overlay.pinned ? this._manager.hide() : this._manager.show(true),
+            onHold: hold,
             onEdit: () => this._edit.open(),
             onSettings: () => this.openPreferences(),
         });
@@ -48,6 +62,7 @@ export default class LedgeExtension extends Extension {
     }
 
     disable() {
+        Main.wm.removeKeybinding(SHORTCUT);
         this._indicator.destroy();
         this._indicator = null;
         this._edit.destroy();

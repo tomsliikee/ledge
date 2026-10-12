@@ -116,7 +116,14 @@ export function media() {
         },
         act(command) {
             const player = current();
-            if (!player || !COMMANDS.has(command))
+            if (!player)
+                return;
+            // Brings the player's own window to the front.
+            if (command === 'Raise') {
+                bus.call(player[0], PATH, 'org.mpris.MediaPlayer2', 'Raise', null, null, Gio.DBusCallFlags.NONE, -1, null, null);
+                return;
+            }
+            if (!COMMANDS.has(command))
                 return;
             bus.call(player[0], PATH, PLAYER, command, null, null, Gio.DBusCallFlags.NONE, -1, null, null);
         },

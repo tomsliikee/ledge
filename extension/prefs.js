@@ -3,6 +3,7 @@
 // either can be used.
 
 import Adw from 'gi://Adw';
+import Gdk from 'gi://Gdk';
 import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk';
 
@@ -104,6 +105,72 @@ function lookGroup(store) {
     return {group, refresh};
 }
 
+// Asks for the next combination of keys in a small window of its own.
+function askForShortcut(parent, onChosen) {
+    const dialog = new Adw.Window({
+        transient_for: parent, modal: true, default_width: 380, default_height: 180, title: 'Shortcut',
+    });
+    dialog.set_content(new Adw.StatusPage({
+        title: 'Press the keys',
+        description: 'Escape leaves it as it is.',
+    }));
+    const keys = new Gtk.EventControllerKey();
+    keys.connect('key-pressed', (_keys, keyval, _keycode, state) => {
+        const modifiers = state & Gtk.accelerator_get_default_mod_mask();
+        if (keyval === Gdk.KEY_Escape && modifiers === 0) {
+            dialog.close();
+            return true;
+        }
+        // A modifier on its own is the start of a combination, not one.
+        if (!Gtk.accelerator_valid(keyval, modifiers))
+            return true;
+        onChosen(Gtk.accelerator_name(keyval, modifiers));
+        dialog.close();
+        return true;
+    });
+    dialog.add_controller(keys);
+    dialog.present();
+}
+
+function behaviourGroup(store, window) {
+    const group = new Adw.PreferencesGroup({title: 'Use'});
+    const shortcut = new Adw.ActionRow({
+        title: 'Shortcut',
+        subtitle: 'Holds the widgets over the windows; pressed again, they go back.',
+    });
+    const keys = new Gtk.ShortcutLabel({disabled_text: 'None', valign: Gtk.Align.CENTER});
+    const change = new Gtk.Button({label: 'Change', valign: Gtk.Align.CENTER});
+    const reset = new Gtk.Button({icon_name: 'edit-undo-symbolic', tooltip_text: 'Back to Super+W', valign: Gtk.Align.CENTER});
+    const none = new Gtk.Button({icon_name: 'edit-clear-symbolic', tooltip_text: 'No shortcut', valign: Gtk.Align.CENTER});
+    change.connect('clicked', () => askForShortcut(window, accelerator => {
+        store.shortcut = accelerator;
+    }));
+    reset.connect('clicked', () => store.resetShortcut());
+    none.connect('clicked', () => {
+        store.shortcut = null;
+    });
+    for (const widget of [keys, change, reset, none])
+        shortcut.add_suffix(widget);
+
+    const openApps = new Adw.SwitchRow({
+        title: 'Open apps on click',
+        subtitle: 'A click on the weather opens Weather, one on the calendar Calendar, and so on.',
+    });
+    openApps.connect('notify::active', () => {
+        if (openApps.active !== store.openApps)
+            store.openApps = openApps.active;
+    });
+    group.add(shortcut);
+    group.add(openApps);
+    const refresh = () => {
+        keys.accelerator = store.shortcut ?? '';
+        none.sensitive = store.shortcut !== null;
+        openApps.active = store.openApps;
+    };
+    refresh();
+    return {group, refresh};
+}
+
 function weatherGroup(store, window) {
     const group = new Adw.PreferencesGroup({
         title: 'Place for the weather',
@@ -193,11 +260,13 @@ export default class LedgePreferences extends ExtensionPreferences {
         const store = new Store(this.getSettings());
         const widgets = widgetsPage(store);
         const look = lookGroup(store);
+        const behaviour = behaviourGroup(store, window);
         const weather = weatherGroup(store, window);
         const photo = photoGroup(store, window);
 
         const general = new Adw.PreferencesPage({title: 'General', icon_name: 'preferences-system-symbolic'});
         general.add(look.group);
+        general.add(behaviour.group);
         general.add(weather.group);
         general.add(photo.group);
         window.add(widgets.page);
@@ -207,6 +276,7 @@ export default class LedgePreferences extends ExtensionPreferences {
         store.onChange(() => {
             widgets.refresh();
             look.refresh();
+            behaviour.refresh();
             weather.refresh();
             photo.refresh();
         });

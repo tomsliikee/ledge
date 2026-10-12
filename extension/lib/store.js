@@ -76,6 +76,27 @@ export class Store {
         this._settings.set_string('screens', value);
     }
 
+    // The accelerator that holds the widgets over the windows, or null.
+    get shortcut() {
+        return this._settings.get_strv('toggle-shortcut')[0] ?? null;
+    }
+
+    set shortcut(accelerator) {
+        this._settings.set_strv('toggle-shortcut', accelerator ? [accelerator] : []);
+    }
+
+    resetShortcut() {
+        this._settings.reset('toggle-shortcut');
+    }
+
+    get openApps() {
+        return this._settings.get_boolean('open-apps');
+    }
+
+    set openApps(value) {
+        this._settings.set_boolean('open-apps', value);
+    }
+
     get place() {
         return parsePlace(this._settings.get_string('place'));
     }

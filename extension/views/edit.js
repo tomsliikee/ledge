@@ -24,6 +24,14 @@ const SELECTED_SCALE = 1.03;
 const SIZE_NAMES = {small: 'Small', medium: 'Medium', large: 'Large'};
 const MAX_CITIES = 6;
 
+// "<Super>w" as "Super + W".
+function shortcutLabel(accelerator) {
+    if (!accelerator)
+        return 'None';
+    const parts = accelerator.replace(/[<>]/g, ' ').trim().split(/\s+/);
+    return parts.map(part => part.length === 1 ? part.toUpperCase() : part).join(' + ');
+}
+
 export class EditMode {
     constructor({manager, store}) {
         this._manager = manager;
@@ -49,6 +57,7 @@ export class EditMode {
         manager.onTileClicked = tile => {
             if (this.active)
                 this._select(tile.widget.id);
+            return this.active;
         };
         manager.onSynced = () => {
             if (this.active)
@@ -177,6 +186,16 @@ export class EditMode {
                 on => {
                     this._store.animations = on;
                 }),
+        ]));
+
+        add(section('Use'));
+        add(group([
+            switchItem('Open apps on click', 'A click on the weather opens Weather, one on the calendar Calendar, and so on.', theme, this._store.openApps,
+                on => {
+                    this._store.openApps = on;
+                }),
+            item('Shortcut', 'Holds the widgets over the windows. Change it in the settings window.',
+                text('label', {tone: 'muted', content: shortcutLabel(this._store.shortcut)})),
         ]));
 
         if (Main.layoutManager.monitors.length > 1) {
