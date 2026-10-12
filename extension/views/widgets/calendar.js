@@ -1,8 +1,10 @@
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
+import {dayName, upcoming} from '../../lib/agenda.js';
 import {MONTHS, WEEKDAYS, WEEKDAYS_LONG, monthGrid, weekday} from '../../lib/calendar.js';
-import {CENTER, badge, column, row} from '../parts.js';
+import * as Format from '../../lib/format.js';
+import {CENTER, START, badge, column, hint, row} from '../parts.js';
 import {text} from '../text.js';
 
 function sheet(now, cell) {
@@ -68,3 +70,55 @@ function build(ctx) {
 }
 
 export const calendar = build;
+
+const TIME_WIDTH = 80;
+
+function buildEvents(ctx) {
+    const large = ctx.size === 'large';
+    const lines = large ? 9 : 4;
+    const list = column({gap: 'lg-stack', y: START});
+    const message = hint('');
+    let reading = null;
+
+    const clock = ms => {
+        const date = new Date(ms);
+        return Format.time(date.getHours(), date.getMinutes(), ctx.twelveHour);
+    };
+
+    const render = () => {
+        if (!reading)
+            return;
+        const now = Date.now();
+        const ahead = upcoming(reading.events, now);
+        list.destroy_all_children();
+        list.visible = ahead.length > 0;
+        message.visible = ahead.length === 0;
+        message.text = reading.available ? 'Nothing ahead this week.' : 'No calendar is set up. Add an account in Settings.';
+        // A line for each day's name and one for each entry, as many as fit.
+        let left = lines;
+        let day = null;
+        for (const event of ahead) {
+            const named = event.day !== day;
+            if (left < (named ? 2 : 1))
+                break;
+            if (named) {
+                day = event.day;
+                list.add_child(text('label', {tone: day === 0 ? 'accent' : 'muted', content: dayName(day, now)}));
+                left--;
+            }
+            const when = text('body', {tone: 'muted', content: event.allDay ? 'All day' : event.running ? 'Now' : clock(event.start)});
+            when.width = TIME_WIDTH;
+            list.add_child(row({gap: 'lg-row-tight', children: [when, text('body-strong', {expand: true, content: event.summary})]}));
+            left--;
+        }
+    };
+    ctx.watch('events', data => {
+        reading = data;
+        render();
+    });
+    // An entry begins and ends without the calendar changing.
+    ctx.watch('minute', render);
+    return {actor: column({children: [message, list]})};
+}
+
+export const events = buildEvents;

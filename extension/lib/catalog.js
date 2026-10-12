@@ -27,6 +27,8 @@ export const catalog = {
     memory: entry('Memory', 'How much of the memory is in use.', COMPACT, {opens: MONITOR}),
     temperature: entry('Temperature', 'The temperature of the processor.', COMPACT, {opens: MONITOR}),
     calendar: entry('Calendar', 'Today\'s date and the sheet of the month.', ALL, {tone: 'tertiary', opens: ['org.gnome.Calendar']}),
+    events: entry('Up next', 'What the calendar holds for the coming week, as far as the shell has loaded it.', WIDE,
+        {tone: 'secondary', opens: ['org.gnome.Calendar']}),
     battery: entry('Battery', 'Charge and time left. Stays away on a machine without a battery.', COMPACT, {tone: 'secondary', opens: ['gnome-power-panel']}),
     network: entry('Network', 'Download and upload per second, over all real network interfaces.', COMPACT, {opens: MONITOR}),
     disk: entry('Storage', 'How full the disks are.', COMPACT, {tone: 'tertiary', opens: ['org.gnome.baobab']}),
