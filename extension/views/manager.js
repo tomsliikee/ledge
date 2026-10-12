@@ -97,7 +97,7 @@ export class Manager {
             if (key === 'widgets' || key === 'screens')
                 this._sync();
             else if (key === 'place')
-                hub.restart('weather');
+                ['weather', 'air'].forEach(source => hub.restart(source));
             else
                 this._restyle();
         });

@@ -39,6 +39,8 @@ export const catalog = {
     note: entry('Note', 'A slip of paper for a few lines. Write on it while the widgets are held over the windows.', ALL,
         {defaults: {text: ''}, multiple: true, tone: 'secondary'}),
     daylight: entry('Daylight', 'Sunrise, sunset and where the sun stands, for the place of the weather.', COMPACT, {tone: 'secondary', opens: ['org.gnome.Weather']}),
+    air: entry('Air', 'The air quality index and the pollen at the place of the weather, from Open-Meteo.', COMPACT,
+        {opens: ['org.gnome.Weather']}),
     processes: entry('Top processes', 'The programs that use the most processor time or memory.', WIDE,
         {defaults: {by: 'cpu'}, opens: MONITOR}),
     countdown: entry('Countdown', 'The days until a date of your choice.', COMPACT,

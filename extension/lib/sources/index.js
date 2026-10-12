@@ -5,8 +5,8 @@ import {battery, claude, disk, photo} from './local.js';
 import {media} from './media.js';
 import {cpu, memory, network, processes, temperature} from './system.js';
 import {minute, second} from './time.js';
-import {weather} from './weather.js';
+import {air, weather} from './weather.js';
 
 export const factories = {
-    battery, claude, cpu, disk, gpu, media, memory, minute, network, photo, processes, second, temperature, weather,
+    air, battery, claude, cpu, disk, gpu, media, memory, minute, network, photo, processes, second, temperature, weather,
 };

@@ -5,11 +5,14 @@
 import GLib from 'gi://GLib';
 import Soup from 'gi://Soup';
 
+import {parseAir} from '../air.js';
 import * as Weather from '../weather.js';
 import {polled} from '../hub.js';
 
 const INTERVAL = 30 * 60;
 const FORECAST = 'https://api.open-meteo.com/v1/forecast';
+const AIR = 'https://air-quality-api.open-meteo.com/v1/air-quality';
+const AIR_INTERVAL = 60 * 60;
 const SEARCH = 'https://geocoding-api.open-meteo.com/v1/search';
 const TIMEOUT = 20;
 
@@ -76,6 +79,52 @@ export function weather(_parameter, env) {
         } catch (e) {
             console.debug(`Ledge: weather request failed: ${e.message}`);
             return {place, forecast: last?.forecast ?? null, problem: 'failed'};
+        }
+    }, env);
+    return {
+        start(emit) {
+            session ??= newSession();
+            source.start(emit);
+        },
+        stop() {
+            source.stop();
+        },
+        destroy() {
+            session?.abort();
+            session = null;
+        },
+    };
+}
+
+async function fetchAir(session, place) {
+    const json = await getJson(session, `${AIR}?${query({
+        latitude: place.latitude.toFixed(3),
+        longitude: place.longitude.toFixed(3),
+        current: 'european_aqi,pm10,pm2_5,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen',
+        timezone: 'auto',
+    })}`);
+    return parseAir(json);
+}
+
+// Emits {place, air, problem} for the place of the weather, the way the
+// forecast does.
+export function air(_parameter, env) {
+    let session = null;
+    let last = null;
+    const source = polled(AIR_INTERVAL, async () => {
+        const place = env.place();
+        if (!place)
+            return {place: null, air: null, problem: null};
+        if (last && last.place.name !== place.name)
+            last = null;
+        try {
+            const reading = await fetchAir(session, place);
+            if (reading)
+                last = {place, air: reading};
+            return {place, air: last?.air ?? null, problem: reading ? null : 'failed'};
+        } catch (e) {
+            console.debug(`Ledge: air quality request failed: ${e.message}`);
+            return {place, air: last?.air ?? null, problem: 'failed'};
         }
     }, env);
     return {

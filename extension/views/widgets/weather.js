@@ -1,9 +1,10 @@
+import {describePollen} from '../../lib/air.js';
 import {WEEKDAYS} from '../../lib/calendar.js';
 import * as Format from '../../lib/format.js';
 import * as Weather from '../../lib/weather.js';
 import {Meter} from '../meter.js';
 import {colors} from '../../lib/tokens.js';
-import {CENTER, END, badge, column, hint, icon, row, spacer} from '../parts.js';
+import {CENTER, END, badge, column, gauge, hint, icon, row, spacer} from '../parts.js';
 import {SunArc} from '../sunarc.js';
 import {text} from '../text.js';
 
@@ -167,3 +168,46 @@ function buildDaylight(ctx) {
 }
 
 export const daylight = buildDaylight;
+
+const NO_AIR = 'The air quality could not be loaded.';
+const AIR_TONE = 'tertiary';
+
+function buildAir(ctx) {
+    const small = ctx.size === 'small';
+    const place = text('label', {tone: 'muted'});
+    // The index on a shape that grows more jagged as the air gets worse;
+    // in the calm look in a ring.
+    const mark = ctx.expressive
+        ? badge({size: small ? 100 : 104, theme: ctx.theme, role: 'metric-s', accent: AIR_TONE})
+        : gauge({size: small ? 100 : 104, stroke: 10, theme: ctx.theme, role: 'metric-s'});
+    const name = text('title');
+    const dust = text('body', {tone: 'muted'});
+    const pollen = text('body-strong');
+    const content = small
+        ? column({gap: 'lg-stack', children: [place, mark.actor]})
+        : row({gap: 'lg-row-wide', children: [mark.actor, column({gap: 'lg-stack', y: CENTER, children: [place, name, dust, pollen]})]});
+    content.visible = false;
+    const message = hint(NO_PLACE);
+    ctx.watch('air', data => {
+        const ready = Boolean(data.air);
+        content.visible = ready;
+        message.visible = !ready;
+        message.text = data.place ? NO_AIR : NO_PLACE;
+        if (!ready)
+            return;
+        const {air} = data;
+        place.text = small ? `Air · ${air.name}` : `Air in ${data.place.name}`;
+        mark.label.text = String(air.index);
+        if (ctx.expressive)
+            mark.show(Math.min(0.99, air.share), air.tone);
+        else
+            mark.ring.set(100 * air.share, air.tone);
+        name.text = air.name;
+        dust.text = air.pm25 === null ? '' : `PM2.5 ${Math.round(air.pm25)} · PM10 ${Math.round(air.pm10 ?? 0)}`;
+        pollen.text = describePollen(air.pollen);
+        pollen.visible = air.pollen !== null;
+    });
+    return {actor: column({children: [message, content]})};
+}
+
+export const air = buildAir;

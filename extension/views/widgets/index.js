@@ -8,9 +8,9 @@ import {media} from './media.js';
 import {battery, claude, disk, network} from './status.js';
 import {system} from './system.js';
 import {countdown, pomodoro, timer, worldclock} from './times.js';
-import {daylight, weather} from './weather.js';
+import {air, daylight, weather} from './weather.js';
 
 export const builders = {
     clock, weather, system, cpu, gpu, memory, temperature, calendar, battery, network, disk,
-    media, claude, worldclock, timer, note, daylight, processes, countdown, photo, tasks, pomodoro,
+    media, claude, worldclock, timer, note, daylight, processes, countdown, photo, tasks, pomodoro, air,
 };
