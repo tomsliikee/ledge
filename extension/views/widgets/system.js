@@ -1,6 +1,6 @@
 // The whole machine in one widget: processor, graphics, memory, temperature.
 
-import {Glide} from '../motion.js';
+import {count} from '../motion.js';
 import {CENTER, badge, column, gauge, row} from '../parts.js';
 import {Spark} from '../spark.js';
 import {setTone, text} from '../text.js';
@@ -18,30 +18,26 @@ const PARTS = [
 const bare = value => value.replace(/ ?(%|°C)$/, '');
 
 function rings(ctx) {
-    const glides = [];
     const cells = PARTS.map(([key, read, short, tone]) => {
         const name = text('label', {tone: 'muted', align: CENTER, content: short});
         if (ctx.expressive) {
             const mark = badge({size: 66, theme: ctx.theme, role: 'body-strong', accent: tone});
             ctx.watch(key, data => {
                 const reading = read(data);
-                mark.show((reading.percent ?? 0) / 100, reading.tone, bare(reading.value));
+                mark.show((reading.percent ?? 0) / 100, reading.tone);
+                count(mark.label, bare(reading.value));
             });
             return column({y: CENTER, children: [mark.actor, name]});
         }
         const {actor: dial, ring, label} = gauge({size: 64, stroke: 7, theme: ctx.theme, role: 'body-strong'});
-        let ringTone = 'primary';
-        const glide = new Glide(ring, percent => ring.set(percent, ringTone));
-        glides.push(glide);
         ctx.watch(key, data => {
             const reading = read(data);
-            ringTone = reading.tone;
-            label.text = bare(reading.value);
-            glide.to(reading.percent);
+            count(label, bare(reading.value));
+            ring.set(reading.percent, reading.tone);
         });
         return column({y: CENTER, children: [dial, name]});
     });
-    return {actor: row({gap: 'lg-row', children: cells}), destroy: () => glides.forEach(g => g.stop())};
+    return {actor: row({gap: 'lg-row', children: cells})};
 }
 
 function rows(ctx) {
@@ -55,7 +51,7 @@ function rows(ctx) {
         ctx.watch(key, data => {
             const reading = read(data);
             name.text = reading.name;
-            value.text = reading.value;
+            count(value, reading.value);
             setTone(value, reading.tone === 'primary' ? null : reading.tone);
             spark.set(reading.history, reading.tone);
         });

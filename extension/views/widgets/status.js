@@ -2,7 +2,7 @@
 
 import * as Format from '../../lib/format.js';
 import {Meter} from '../meter.js';
-import {Glide} from '../motion.js';
+import {count} from '../motion.js';
 import {CENTER, column, gauge, hint, icon, iconButton, row} from '../parts.js';
 import {Slider} from '../slider.js';
 import {Spark} from '../spark.js';
@@ -31,18 +31,14 @@ function buildBattery(ctx) {
     const sentence = text(ctx.size === 'small' ? 'label' : 'body-strong', {tone: ctx.size === 'small' ? 'muted' : null});
     let actor;
     let show;
-    let glide = null;
 
     if (ctx.size === 'small') {
         const {actor: dial, ring, label} = gauge({size: 88, stroke: 9, theme: ctx.theme, accent: ctx.accent, role: 'metric-s', wavy: ctx.expressive});
-        let tone = 'primary';
-        glide = new Glide(ring, percent => ring.set(percent, tone));
         sentence.x_align = CENTER;
         actor = column({gap: 'lg-stack', children: [name, dial, sentence]});
         show = reading => {
-            tone = batteryTone(reading);
-            label.text = Format.percent(reading.percent);
-            glide.to(reading.percent);
+            count(label, Format.percent(reading.percent));
+            ring.set(reading.percent, batteryTone(reading));
         };
     } else {
         const value = text('metric-l');
@@ -50,9 +46,11 @@ function buildBattery(ctx) {
         actor = column({y: CENTER, children: [column({gap: 'lg-stack', children: [name, value]}), progress, sentence]});
         show = reading => {
             const tone = batteryTone(reading);
-            value.text = Format.percent(reading.percent);
+            count(value, Format.percent(reading.percent));
             setTone(value, tone === 'primary' ? null : tone);
             progress.set(reading.percent, tone);
+            // The wave travels while the battery fills.
+            progress.setRunning(reading.state === 'charging');
         };
     }
 
@@ -63,7 +61,7 @@ function buildBattery(ctx) {
         sentence.text = batterySentence(reading);
         show(reading);
     });
-    return {actor, destroy: () => glide?.stop()};
+    return {actor};
 }
 
 export const battery = buildBattery;
@@ -107,7 +105,7 @@ function buildDisk(ctx) {
             if (!disk)
                 return;
             name.text = disk.name;
-            label.text = Format.percent(disk.percent);
+            count(label, Format.percent(disk.percent));
             free.text = `${Format.bytes(disk.free)} free`;
             ring.set(disk.percent, Format.tone(disk.percent));
         });
@@ -144,7 +142,7 @@ function limit(ctx, name, size) {
     const title = text('label', {tone: 'muted', content: name});
     const reset = text('label', {tone: 'muted'});
     const show = window => {
-        label.text = Format.percent(window?.percent ?? null);
+        count(label, Format.percent(window?.percent ?? null));
         ring.set(window?.percent ?? null, Format.tone(window?.percent));
         reset.text = window?.resetsAt ? `Resets in ${Format.duration(window.resetsAt - Date.now())}` : '';
     };

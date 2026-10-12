@@ -5,6 +5,7 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 
 import {colors} from '../lib/tokens.js';
+import {Glide} from './motion.js';
 import {setSource, toneColor} from './paint.js';
 
 const STROKE = 3;
@@ -20,13 +21,26 @@ class Spark extends St.DrawingArea {
         this._max = max;
         this._values = [];
         this._tone = 'primary';
+        // How much of the line is drawn yet: it is drawn in from the left.
+        this._drawn = 1;
+        this._glide = new Glide(this, drawn => {
+            this._drawn = drawn / 100;
+            this.queue_repaint();
+        }, {origin: 0, spring: 'effectSlow'});
         this.connect('repaint', () => this._draw());
+        this.connect('destroy', () => this._glide.stop());
     }
 
     set(values, tone = 'primary') {
         this._values = values;
         this._tone = tone;
+        if (values.length > 1)
+            this._glide.to(100);
         this.queue_repaint();
+    }
+
+    replay() {
+        this._glide.replay();
     }
 
     _draw() {
@@ -44,6 +58,10 @@ class Spark extends St.DrawingArea {
         cr.stroke();
 
         if (values.length > 1) {
+            if (this._drawn < 1) {
+                cr.rectangle(0, 0, width * this._drawn, height);
+                cr.clip();
+            }
             const max = this._max ?? Math.max(1, ...values);
             const step = width / (values.length - 1);
             const y = value => bottom - Math.min(1, Math.max(0, value / max)) * (height - STROKE);

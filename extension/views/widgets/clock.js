@@ -1,7 +1,7 @@
 import {MONTHS, WEEKDAYS_LONG, weekday} from '../../lib/calendar.js';
 import * as Format from '../../lib/format.js';
 import {Dial} from '../dial.js';
-import {motionEnabled} from '../motion.js';
+import {motionEnabled, roll} from '../motion.js';
 import {CENTER, column, row} from '../parts.js';
 import {text} from '../text.js';
 import {WavyProgress} from '../wavy.js';
@@ -51,7 +51,8 @@ function digital(ctx) {
     });
 
     ctx.watch('minute', now => {
-        time.text = Format.clock(now.getHours(), now.getMinutes(), ctx.twelveHour);
+        // The digits roll over with the minute.
+        roll(time, Format.clock(now.getHours(), now.getMinutes(), ctx.twelveHour));
         period.text = now.getHours() < 12 ? 'am' : 'pm';
         day.text = WEEKDAYS_LONG[weekday(now)];
         date.text = dateLine(now);

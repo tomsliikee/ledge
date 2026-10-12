@@ -18,6 +18,14 @@
       <default>true</default>
       <summary>Animate the widgets</summary>
     </key>
+    <key name="lively-motion" type="b">
+      <default>true</default>
+      <summary>Move on springs, fill up on arrival and answer a press</summary>
+    </key>
+    <key name="ambient-motion" type="b">
+      <default>true</default>
+      <summary>Keep shapes and waves moving while nothing happens</summary>
+    </key>
     <key name="expressive" type="b">
       <default>true</default>
       <summary>The expressive look</summary>

@@ -2,12 +2,21 @@
 // shown on it. A tile only receives readings while it can be seen.
 
 import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Graphene from 'gi://Graphene';
 import St from 'gi://St';
 
 import {SIZES} from '../lib/layout.js';
 import {sizes} from '../lib/tokens.js';
+import {ambientEnabled, livelyEnabled, springTo} from './motion.js';
+
+// What moves on its own is drawn this often: enough for slow turning and
+// travelling waves, at half the cost of every frame.
+const FRAME_SECONDS = 1 / 30;
+// The dot of the widget that shows stretches into a pill of this height.
+const DOT = 6;
+const DOT_ON = 14;
 
 export const Tile = GObject.registerClass(
 class Tile extends St.Widget {
@@ -27,6 +36,9 @@ class Tile extends St.Widget {
         this._live = false;
         this._view = null;
         this._stack = null;
+        this._marks = [];
+        this._frames = null;
+        this._frameAt = 0;
         this.connect('destroy', () => this._clear());
         this.rebuild(widget);
     }
@@ -69,6 +81,59 @@ class Tile extends St.Widget {
         this._view.actor.y_expand = true;
         this.add_child(this._view.actor);
         this._addDots();
+        this._collectMarks();
+    }
+
+    // The drawn marks that move on their own: a turning shape, a
+    // travelling wave. They are given frames only while the tile is seen.
+    _collectMarks() {
+        const visit = actor => {
+            if (typeof actor.tick === 'function') {
+                this._marks.push(actor);
+                actor.onMotionChange = () => this.refreshMotion();
+            }
+            actor.get_children().forEach(visit);
+        };
+        visit(this._view.actor);
+        this.refreshMotion();
+    }
+
+    // Starts or stops the frames, as the settings and the marks ask.
+    refreshMotion() {
+        const ambient = ambientEnabled();
+        const wanted = this._live && livelyEnabled() && this._marks.some(mark => mark.moving(ambient));
+        if (wanted === Boolean(this._frames))
+            return;
+        if (!wanted) {
+            this._frames.stop();
+            this._frames = null;
+            this._marks.forEach(mark => mark.rest?.());
+            return;
+        }
+        this._frames = new Clutter.Timeline({actor: this, duration: 1000, repeat_count: -1});
+        this._frames.connect('new-frame', () => {
+            const now = GLib.get_monotonic_time() / 1000000;
+            if (now - this._frameAt < FRAME_SECONDS)
+                return;
+            this._frameAt = now;
+            const idle = ambientEnabled();
+            for (const mark of this._marks) {
+                if (mark.moving(idle))
+                    mark.tick(now);
+            }
+        });
+        this._frames.start();
+    }
+
+    // The tile has come into view: rings fill, numbers count, shapes swell.
+    replay() {
+        if (!livelyEnabled())
+            return;
+        const visit = actor => {
+            actor.replay?.();
+            actor.get_children().forEach(visit);
+        };
+        this.get_children().forEach(visit);
     }
 
     // Marks the tile as the top of a stack of count widgets, of which it is
@@ -98,14 +163,25 @@ class Tile extends St.Widget {
             // Into the tile's padding, clear of the content.
             translation_x: this._definition.bare ? -sizes['space-1'] : sizes['space-3'],
         });
+        const lively = livelyEnabled();
         for (let i = 0; i < count; i++) {
+            const mark = new St.Widget({style_class: 'lg-dot-mark', y_align: Clutter.ActorAlign.CENTER});
             const dot = new St.Button({
                 style_class: i === index ? 'lg-dot lg-dot-on' : 'lg-dot',
-                child: new St.Widget({style_class: 'lg-dot-mark'}),
+                child: mark,
                 accessible_name: `Widget ${i + 1} of ${count}`,
             });
             dot.connect('clicked', () => this._stack?.onPick(i));
             this._dots.add_child(dot);
+            if (lively && i === index) {
+                mark.height = DOT;
+                // Once it stands on the stage: a spring needs its frame clock.
+                const stretch = () => springTo(mark, {height: DOT_ON}, 'fast');
+                if (mark.get_stage())
+                    stretch();
+                else
+                    mark.connect('notify::mapped', () => mark.mapped && mark.height === DOT && stretch());
+            }
         }
         this.add_child(this._dots);
     }
@@ -144,9 +220,13 @@ class Tile extends St.Widget {
                 watcher.stop = null;
             }
         }
+        this.refreshMotion();
     }
 
     _clear() {
+        this._frames?.stop();
+        this._frames = null;
+        this._marks = [];
         for (const watcher of this._watchers)
             watcher.stop?.();
         this._watchers.clear();

@@ -63,6 +63,24 @@ export class Store {
         this._settings.set_boolean('animations', value);
     }
 
+    // Springs, filling up on arrival, answers to a press.
+    get livelyMotion() {
+        return this._settings.get_boolean('lively-motion');
+    }
+
+    set livelyMotion(value) {
+        this._settings.set_boolean('lively-motion', value);
+    }
+
+    // Shapes and waves that keep moving while nothing happens.
+    get ambientMotion() {
+        return this._settings.get_boolean('ambient-motion');
+    }
+
+    set ambientMotion(value) {
+        this._settings.set_boolean('ambient-motion', value);
+    }
+
     get expressive() {
         return this._settings.get_boolean('expressive');
     }

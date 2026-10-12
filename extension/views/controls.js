@@ -88,6 +88,7 @@ export function switchItem(title, about, theme, on, onChange, extra = null) {
         toggle.set(state);
         onChange(state);
     });
+    button.connect('notify::pressed', () => toggle.setPressed(button.pressed));
     const trailing = row({gap: 'lg-row-tight', children: [extra, button]});
     trailing.x_expand = false;
     return item(title, about, trailing);

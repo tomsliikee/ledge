@@ -6,11 +6,14 @@ import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
+import {Glide, livelyEnabled} from './motion.js';
 import {setSource, toneColor} from './paint.js';
 
 const HEIGHT = 44;
 const TRACK = 16;
 const HANDLE = 4;
+// The handle in the hand that drags it.
+const HANDLE_HELD = 2;
 const GAP = 6;
 const REST_ALPHA = 0.26;
 const WHEEL_STEP = 0.05;
@@ -46,12 +49,27 @@ class Slider extends St.DrawingArea {
         this._value = 0;
         this._dimmed = false;
         this._grab = null;
+        this._held = 0;
+        this._holding = new Glide(this, held => {
+            this._held = held / 100;
+            this.queue_repaint();
+        }, {spring: 'fast'});
+        this._holding.to(0);
+        // A value set from outside glides there; one dragged follows the hand.
+        this._glide = new Glide(this, value => {
+            this._value = value / 100;
+            this.queue_repaint();
+        }, {origin: 0});
         this.connect('repaint', () => this._draw());
         this.connect('button-press-event', (_actor, event) => this._pressed(event));
         this.connect('motion-event', (_actor, event) => this._moved(event));
         this.connect('button-release-event', () => this._released());
         this.connect('scroll-event', (_actor, event) => this._scrolled(event));
-        this.connect('destroy', () => this._grab?.dismiss());
+        this.connect('destroy', () => {
+            this._grab?.dismiss();
+            this._holding.stop();
+            this._glide.stop();
+        });
     }
 
     // dimmed: shown as switched off, such as a muted volume.
@@ -59,9 +77,19 @@ class Slider extends St.DrawingArea {
         // Not under the hand that is dragging it.
         if (this._grab)
             return;
-        this._value = Math.min(1, Math.max(0, value ?? 0));
         this._dimmed = dimmed;
+        this._glide.to(100 * Math.min(1, Math.max(0, value ?? 0)));
         this.queue_repaint();
+    }
+
+    replay() {
+        if (!this._grab)
+            this._glide.replay();
+    }
+
+    _hold(held) {
+        if (livelyEnabled())
+            this._holding.to(held ? 100 : 0);
     }
 
     _valueAt(event) {
@@ -72,6 +100,7 @@ class Slider extends St.DrawingArea {
     }
 
     _report(value) {
+        this._glide.jump(100 * value);
         this._value = value;
         this.queue_repaint();
         this._onChange(value);
@@ -83,6 +112,7 @@ class Slider extends St.DrawingArea {
         if (event.get_button() !== Clutter.BUTTON_PRIMARY)
             return Clutter.EVENT_PROPAGATE;
         this._grab = global.stage.grab(this);
+        this._hold(true);
         this._report(this._valueAt(event));
         return Clutter.EVENT_STOP;
     }
@@ -99,6 +129,7 @@ class Slider extends St.DrawingArea {
             return Clutter.EVENT_PROPAGATE;
         this._grab.dismiss();
         this._grab = null;
+        this._hold(false);
         return Clutter.EVENT_STOP;
     }
 
@@ -121,7 +152,8 @@ class Slider extends St.DrawingArea {
         const [width, height] = this.get_surface_size();
         const color = toneColor(this._theme, 'primary', this._accent);
         const inset = HANDLE / 2 + GAP;
-        const handle = inset + this._value * (width - 2 * inset);
+        const handle = inset + Math.min(1, Math.max(0, this._value)) * (width - 2 * inset);
+        const thick = HANDLE + (HANDLE_HELD - HANDLE) * this._held;
         const top = (height - TRACK) / 2;
         const round = TRACK / 2;
         // The filled part, with only a small rounding where it meets the handle.
@@ -131,7 +163,7 @@ class Slider extends St.DrawingArea {
         const rest = handle + HANDLE / 2 + GAP;
         bar(cr, rest, top, width - rest, TRACK, 2, round);
         setSource(cr, color);
-        bar(cr, handle - HANDLE / 2, 0, HANDLE, height, HANDLE / 2, HANDLE / 2);
+        bar(cr, handle - thick / 2, 0, thick, height, thick / 2, thick / 2);
         cr.$dispose();
     }
 });

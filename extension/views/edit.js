@@ -204,6 +204,14 @@ export class EditMode {
                 on => {
                     this._store.animations = on;
                 }),
+            this._store.animations ? switchItem('Expressive motion', 'Springs that swing past and settle, rings that fill up, numbers that count.', theme, this._store.livelyMotion,
+                on => {
+                    this._store.livelyMotion = on;
+                }) : null,
+            this._store.animations && this._store.livelyMotion ? switchItem('Always moving', 'Shapes turn and waves travel while nothing happens. Rests on battery.', theme, this._store.ambientMotion,
+                on => {
+                    this._store.ambientMotion = on;
+                }) : null,
         ]));
 
         add(section('Use'));

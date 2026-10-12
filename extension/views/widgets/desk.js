@@ -8,6 +8,7 @@ import St from 'gi://St';
 
 import * as Format from '../../lib/format.js';
 import * as Tasks from '../../lib/tasks.js';
+import {livelyEnabled, pop, springTo} from '../motion.js';
 import {CENTER, column, hint, icon, iconButton, row} from '../parts.js';
 import {text} from '../text.js';
 import {loadThumb} from '../thumb.js';
@@ -76,13 +77,16 @@ function buildTasks(ctx) {
     });
 
     // Without a rebuild, so the field keeps the keys while a list is typed in.
-    function change(next) {
+    // moved: the task whose line travels to its new place.
+    function change(next, moved = null) {
+        // Where each task stood, to let the lines glide to their new places.
+        const before = moved === null ? null : Tasks.ordered(items).map(item => item.index);
         items = next;
         ctx.setOptions({items}, false);
-        render();
+        render(moved, before);
     }
 
-    function render() {
+    function render(moved = null, before = null) {
         list.destroy_all_children();
         const ordered = Tasks.ordered(items);
         const open = Tasks.openCount(items);
@@ -90,19 +94,31 @@ function buildTasks(ctx) {
         clear.visible = open < items.length;
         // The last line tells of those that do not fit.
         const fits = ordered.length > shown ? shown - 1 : shown;
-        for (const item of ordered.slice(0, fits)) {
+        ordered.slice(0, fits).forEach((item, place) => {
+            const box = icon(item.done ? 'checkbox-checked-symbolic' : 'checkbox-symbolic', 16, item.done ? 'muted' : null);
             const line = new St.Button({
                 style_class: 'lg-task',
                 x_expand: true,
                 can_focus: true,
                 child: row({gap: 'lg-row-tight', children: [
-                    icon(item.done ? 'checkbox-checked-symbolic' : 'checkbox-symbolic', 16, item.done ? 'muted' : null),
+                    box,
                     text('body', {tone: item.done ? 'muted' : null, expand: true, content: item.text}),
                 ]}),
             });
-            line.connect('clicked', () => change(Tasks.toggle(items, item.index)));
+            line.connect('clicked', () => change(Tasks.toggle(items, item.index), item.index));
             list.add_child(line);
-        }
+            const stood = before?.indexOf(item.index) ?? -1;
+            if (stood >= 0 && livelyEnabled() && list.get_stage()) {
+                // Each line glides from where it stood, and the box of the
+                // one that was pressed swells with its tick. A line is as
+                // high as it asks to be.
+                const [, height] = line.get_preferred_height(-1);
+                line.translation_y = (Math.min(stood, fits) - place) * height;
+                springTo(line, {translation_y: 0});
+                if (item.index === moved)
+                    pop(box);
+            }
+        });
         if (ordered.length > fits)
             list.add_child(text('label', {tone: 'muted', content: `and ${ordered.length - fits} more`}));
         if (items.length === 0)

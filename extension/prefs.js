@@ -81,6 +81,22 @@ function lookGroup(store) {
         if (animations.active !== store.animations)
             store.animations = animations.active;
     });
+    const lively = new Adw.SwitchRow({
+        title: 'Expressive motion',
+        subtitle: 'Springs that swing past and settle, rings that fill up as they arrive, numbers that count.',
+    });
+    lively.connect('notify::active', () => {
+        if (lively.active !== store.livelyMotion)
+            store.livelyMotion = lively.active;
+    });
+    const ambient = new Adw.SwitchRow({
+        title: 'Always moving',
+        subtitle: 'Shapes turn and waves travel while nothing happens. Redraws the widgets all the time, so it rests on battery.',
+    });
+    ambient.connect('notify::active', () => {
+        if (ambient.active !== store.ambientMotion)
+            store.ambientMotion = ambient.active;
+    });
     const screens = new Adw.ComboRow({
         title: 'Several screens',
         subtitle: 'A screen keeps its own widgets when it is unplugged.',
@@ -94,6 +110,8 @@ function lookGroup(store) {
     group.add(expressive);
     group.add(translucent);
     group.add(animations);
+    group.add(lively);
+    group.add(ambient);
     group.add(screens);
     const refresh = () => {
         screens.selected = SCREENS.indexOf(store.screens);
@@ -101,6 +119,11 @@ function lookGroup(store) {
         expressive.active = store.expressive;
         translucent.active = store.translucent;
         animations.active = store.animations;
+        lively.active = store.livelyMotion;
+        ambient.active = store.ambientMotion;
+        // Each step builds on the one before it.
+        lively.sensitive = store.animations;
+        ambient.sensitive = store.animations && store.livelyMotion;
     };
     refresh();
     return {group, refresh};
@@ -281,7 +304,8 @@ function backupGroup(store, window) {
             }
             const text = toBackup({
                 widgets: store.widgets, style: store.style, expressive: store.expressive, translucent: store.translucent,
-                animations: store.animations, screens: store.screens, place: store.place,
+                animations: store.animations, livelyMotion: store.livelyMotion, ambientMotion: store.ambientMotion,
+                screens: store.screens, place: store.place,
             });
             try {
                 file.replace_contents(new TextEncoder().encode(text), null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null);

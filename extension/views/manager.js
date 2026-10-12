@@ -18,7 +18,7 @@ import {WALLPAPER_STYLE} from '../lib/store.js';
 import * as Stack from '../lib/stack.js';
 import {coveredMonitors, mayShow} from '../lib/visibility.js';
 import * as Monitors from './monitors.js';
-import {LAYOUT_MS, STATE_MS, ease, setMotion} from './motion.js';
+import {HOVER_MS, LAYOUT_MS, STATE_MS, ease, livelyEnabled, setMotion, springTo} from './motion.js';
 import {Overlay} from './overlay.js';
 import {pressedControl} from './parts.js';
 import {Tile} from './tile.js';
@@ -30,6 +30,12 @@ const DRAG_THRESHOLD = 6;
 const LIFTED_SCALE = 1.03;
 const APPEAR_SCALE = 0.96;
 const APPEAR_RISE = 12;
+// In the lively step the sheet comes from further off and swings in.
+const LIVELY_APPEAR_SCALE = 0.88;
+const LIVELY_APPEAR_RISE = 28;
+// A tile gives way under the press, and rises a little under the pointer.
+const PRESSED_SCALE = 0.97;
+const HOVER_RISE = 3;
 // How far the widgets of a stack travel when it is turned.
 const TURN_RISE = 24;
 // A wheel sends many small steps; a stack takes one of them per this long.
@@ -92,8 +98,14 @@ export class Manager {
         this._connect(global.window_manager, 'minimize', () => this._queueRecount());
         this._connect(global.window_manager, 'switch-workspace', () => this._queueRecount());
 
-        // Widgets may be set to step aside on battery.
-        this._stopPower = power.listen(() => this._sync());
+        // Widgets may be set to step aside on battery, and nothing moves
+        // on its own there.
+        this._stopPower = power.listen(() => {
+            this._setMotion();
+            this._sync();
+            for (const tile of this._tiles.values())
+                tile.refreshMotion();
+        });
 
         store.onChange(key => {
             if (key === 'widgets' || key === 'screens')
@@ -165,7 +177,7 @@ export class Manager {
     _restyle() {
         const dark = this._interface.get_string('color-scheme') === 'prefer-dark';
         this._theme = `${this._store.style}-${dark ? 'dark' : 'light'}`;
-        setMotion(this._store.animations);
+        this._setMotion();
         const classes = [`lg-root-${this._theme}`, this._store.translucent ? 'lg-translucent' : '',
             this._store.expressive ? 'lg-expressive' : ''].join(' ');
         this._desktop.style_class = classes;
@@ -173,6 +185,15 @@ export class Manager {
         for (const tile of this._tiles.values())
             tile.rebuild(tile.widget);
         this._sync();
+    }
+
+    _setMotion() {
+        setMotion({
+            enabled: this._store.animations,
+            lively: this._store.livelyMotion,
+            // What moves without a reason is not worth the battery.
+            ambient: this._store.ambientMotion && !this._power.onBattery,
+        });
     }
 
     // Brings the tiles in line with the stored layout. A widget has one tile
@@ -215,6 +236,8 @@ export class Manager {
                 tile = new Tile({widget, definition: catalog[widget.type], build: builders[widget.type], services: this._services});
                 tile.connect('button-press-event', (_tile, event) => this._pressed(tile, event));
                 tile.connect('scroll-event', (_tile, event) => this._scrolled(tile, event));
+                tile.track_hover = true;
+                tile.connect('notify::hover', () => this._hovered(tile));
                 this._container().add_child(tile);
                 this._tiles.set(key, tile);
                 const before = leaving.get(`${widget.stack}@${index}`);
@@ -310,7 +333,7 @@ export class Manager {
             onComplete: () => before.destroy(),
         }, STATE_MS, Clutter.AnimationMode.EASE_IN_CUBIC);
         tile.set({opacity: 0, translation_y: way * TURN_RISE});
-        ease(tile, {opacity: 255, translation_y: 0}, LAYOUT_MS, Clutter.AnimationMode.EASE_OUT_QUINT);
+        springTo(tile, {opacity: 255, translation_y: 0}, 'bouncy', LAYOUT_MS, Clutter.AnimationMode.EASE_OUT_QUINT);
     }
 
     _showMember(id, step) {
@@ -388,6 +411,7 @@ export class Manager {
         this._overlay.show(pinned);
         if (!first)
             return;
+        const arriving = [];
         for (const tile of this._tiles.values()) {
             // Shown again while they were leaving: they are here already and
             // come back from wherever they got to.
@@ -398,17 +422,23 @@ export class Manager {
             }
             // A tile on a free desktop is in view already and stays as it
             // is. Those behind a window arrive together, as one sheet.
+            const lively = livelyEnabled();
             if (!leaving && this._covered.has(tile.monitorIndex)) {
+                const scale = lively ? LIVELY_APPEAR_SCALE : APPEAR_SCALE;
                 tile.set({
-                    opacity: 0, translation_y: APPEAR_RISE,
-                    scale_x: APPEAR_SCALE, scale_y: APPEAR_SCALE,
+                    opacity: 0, translation_y: lively ? LIVELY_APPEAR_RISE : APPEAR_RISE,
+                    scale_x: scale, scale_y: scale,
                 });
+                arriving.push(tile);
             }
-            ease(tile, {opacity: 255, translation_y: 0, scale_x: 1, scale_y: 1},
-                LAYOUT_MS, Clutter.AnimationMode.EASE_OUT_QUINT);
+            springTo(tile, {opacity: 255, translation_y: 0, scale_x: 1, scale_y: 1},
+                'bouncy', LAYOUT_MS, Clutter.AnimationMode.EASE_OUT_QUINT);
         }
         this._moveGhost(this._overlay.holder);
         this._updateLive();
+        // With their readings: what they show fills up as they arrive.
+        for (const tile of arriving)
+            tile.replay();
     }
 
     // peek: end only a look, and leave held widgets alone.
@@ -465,7 +495,23 @@ export class Manager {
         drag.motion = tile.connect('motion-event', (_tile, e) => this._dragged(e));
         drag.release = tile.connect('button-release-event', () => this._dropped());
         this._drag = drag;
+        // While arranging, the scale of a tile says which one is chosen.
+        drag.gave = livelyEnabled() && !this.arranging;
+        if (drag.gave)
+            ease(tile, {scale_x: PRESSED_SCALE, scale_y: PRESSED_SCALE, translation_y: 0}, HOVER_MS);
         return Clutter.EVENT_STOP;
+    }
+
+    // A tile rises a little under the pointer while the widgets are held
+    // and can be used.
+    _hovered(tile) {
+        if (!livelyEnabled() || this.arranging || this._drag)
+            return;
+        const rise = tile.hover && this._overlay.pinned;
+        // Not into a tile that is still arriving or leaving.
+        if (tile.opacity !== 255 || (!rise && tile.translation_y === 0))
+            return;
+        springTo(tile, {translation_y: rise ? -HOVER_RISE : 0}, 'fast');
     }
 
     // Where a tile at stage position x, y would come to rest.
@@ -535,21 +581,23 @@ export class Manager {
         drag.tile.disconnect(drag.release);
         this._ghost.hide();
         if (!drag.moved) {
+            if (drag.gave)
+                springTo(drag.tile, {scale_x: 1, scale_y: 1}, 'fast');
             // While arranging a click selects; otherwise it opens the app.
             if (!this._onTileClicked?.(drag.tile))
                 this._open(drag.tile);
             return Clutter.EVENT_STOP;
         }
         if (drag.onto) {
-            ease(drag.tile, {x: drag.onto.x, y: drag.onto.y, scale_x: 1, scale_y: 1}, STATE_MS);
+            springTo(drag.tile, {x: drag.onto.x, y: drag.onto.y, scale_x: 1, scale_y: 1}, 'bouncy', STATE_MS);
             this._store.widgets = Stack.join(this._store.widgets, drag.tile.widget.id, drag.onto.widget.id, typeSizes);
             return Clutter.EVENT_STOP;
         }
         const target = this._target(drag.tile, drag.tile.x, drag.tile.y);
         drag.tile.monitorIndex = target.index;
-        ease(drag.tile, {
+        springTo(drag.tile, {
             x: target.area.x + target.x, y: target.area.y + target.y, scale_x: 1, scale_y: 1,
-        }, LAYOUT_MS);
+        }, 'bouncy', LAYOUT_MS);
         const monitor = Monitors.connectors()[target.index] ?? null;
         // The monitor a widget belongs to is only rewritten where it shows;
         // the other modes keep it for the way back.

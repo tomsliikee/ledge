@@ -5,6 +5,7 @@ import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
+import {Glide} from './motion.js';
 import {setSource, toneColor} from './paint.js';
 
 const HEIGHT = 8;
@@ -28,7 +29,14 @@ class Meter extends St.DrawingArea {
         this._from = 0;
         this._to = 0;
         this._tone = 'primary';
+        // How much of the span is drawn yet: it grows from its start.
+        this._grown = 1;
+        this._glide = new Glide(this, grown => {
+            this._grown = grown / 100;
+            this.queue_repaint();
+        }, {origin: 0});
         this.connect('repaint', () => this._draw());
+        this.connect('destroy', () => this._glide.stop());
     }
 
     // from and to are shares of the track, 0–1.
@@ -36,7 +44,12 @@ class Meter extends St.DrawingArea {
         this._from = from;
         this._to = to;
         this._tone = tone;
+        this._glide.to(100);
         this.queue_repaint();
+    }
+
+    replay() {
+        this._glide.replay();
     }
 
     _draw() {
@@ -48,7 +61,8 @@ class Meter extends St.DrawingArea {
         if (this._to > this._from) {
             setSource(cr, toneColor(this._theme, this._tone, this._accent));
             const x = Math.min(this._from * width, width - height);
-            pill(cr, x, (this._to - this._from) * width, height);
+            const span = Math.min(width - x, (this._to - this._from) * width * this._grown);
+            pill(cr, x, span, height);
             cr.fill();
         }
         cr.$dispose();

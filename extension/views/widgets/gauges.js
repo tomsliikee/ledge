@@ -2,7 +2,7 @@
 // a number with its recent course when medium.
 
 import * as Format from '../../lib/format.js';
-import {Glide} from '../motion.js';
+import {count} from '../motion.js';
 import {CENTER, badge, column, gauge, row} from '../parts.js';
 import {Spark} from '../spark.js';
 import {setTone, text} from '../text.js';
@@ -14,23 +14,22 @@ function loadWidget(key, read, tone) {
         const name = text('label', {tone: 'muted'});
         let show;
         let actor;
-        let glide;
 
         if (ctx.size === 'small' && ctx.expressive) {
             // The value on a shape that swells with it. Each load has its
             // own tone, so four of them side by side can be told apart.
             const mark = badge({size: 108, theme: ctx.theme, role: 'metric-s', accent: tone});
             actor = column({gap: 'lg-stack', children: [name, mark.actor]});
-            show = reading => mark.show((reading.percent ?? 0) / 100, reading.tone, reading.value);
+            show = reading => {
+                mark.show((reading.percent ?? 0) / 100, reading.tone);
+                count(mark.label, reading.value);
+            };
         } else if (ctx.size === 'small') {
             const {actor: dial, ring, label} = gauge({size: 104, stroke: 10, theme: ctx.theme, role: 'metric-s'});
-            let ringTone = 'primary';
-            glide = new Glide(ring, percent => ring.set(percent, ringTone));
             actor = column({gap: 'lg-stack', children: [name, dial]});
             show = reading => {
-                ringTone = reading.tone;
-                label.text = reading.value;
-                glide.to(reading.percent);
+                count(label, reading.value);
+                ring.set(reading.percent, reading.tone);
             };
         } else {
             const value = text('metric-l');
@@ -43,7 +42,7 @@ function loadWidget(key, read, tone) {
             actor.get_first_child().x_expand = false;
             actor.get_first_child().width = 152;
             show = reading => {
-                value.text = reading.value;
+                count(value, reading.value);
                 setTone(value, reading.tone === 'primary' ? null : reading.tone);
                 sentence.text = reading.sentence;
                 spark.set(reading.history, reading.tone);
@@ -55,7 +54,7 @@ function loadWidget(key, read, tone) {
             name.text = reading.name;
             show(reading);
         });
-        return {actor, destroy: () => glide?.stop()};
+        return {actor};
     };
 }
 

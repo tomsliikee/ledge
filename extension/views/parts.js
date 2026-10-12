@@ -3,6 +3,7 @@
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
+import {pop, pressable} from './motion.js';
 import {onToneColor} from './paint.js';
 import {Ring} from './ring.js';
 import {ShapeBadge} from './shape.js';
@@ -12,6 +13,9 @@ export const START = Clutter.ActorAlign.START;
 export const CENTER = Clutter.ActorAlign.CENTER;
 export const END = Clutter.ActorAlign.END;
 export const FILL = Clutter.ActorAlign.FILL;
+
+// What a shape that comes into view grows from.
+const ARRIVAL_SCALE = 0.72;
 
 function box(vertical, {gap = '', expand = false, x = FILL, y = FILL, children = []} = {}) {
     const actor = new St.BoxLayout({
@@ -59,6 +63,7 @@ export function iconButton(name, onClick, {kind = null, small = false, label = '
         y_align: CENTER,
     });
     button.connect('clicked', onClick);
+    pressable(button);
     return button;
 }
 
@@ -119,6 +124,8 @@ export function badge({size, theme, role, accent = 'primary', mood = 'radiant', 
         label.style = `color: ${onToneColor(theme, tone, accent)};`;
     };
     colour('primary');
+    // Shape and writing swell together when the tile comes into view.
+    actor.replay = () => pop(actor, ARRIVAL_SCALE);
     return {
         actor, shape, label,
         show(level, tone, value) {

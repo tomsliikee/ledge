@@ -6,7 +6,8 @@ import {parsePlace} from './weather.js';
 const VERSION = 1;
 const SCREENS = ['own', 'mirror', 'primary'];
 
-// settings: {widgets, style, expressive, translucent, animations, screens, place}
+// settings: {widgets, style, expressive, translucent, animations,
+//            livelyMotion, ambientMotion, screens, place}
 export function toBackup(settings) {
     return `${JSON.stringify({ledge: VERSION, ...settings}, null, 2)}\n`;
 }
@@ -26,7 +27,7 @@ export function fromBackup(text, types, styles) {
     const settings = {widgets: parseLayout(JSON.stringify(data.widgets), types)};
     if (styles.includes(data.style))
         settings.style = data.style;
-    for (const key of ['expressive', 'translucent', 'animations']) {
+    for (const key of ['expressive', 'translucent', 'animations', 'livelyMotion', 'ambientMotion']) {
         if (typeof data[key] === 'boolean')
             settings[key] = data[key];
     }

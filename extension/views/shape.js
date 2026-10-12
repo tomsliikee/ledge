@@ -6,10 +6,12 @@ import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
-import {Glide} from './motion.js';
+import {Glide, livelyEnabled} from './motion.js';
 import {setSource, toneColor} from './paint.js';
 
 const TURN = 2 * Math.PI;
+// A shape left to itself takes this long for one turn.
+const TURN_SECONDS = 48;
 
 // A circle whose edge swells and dips: lobes of them, by depth as a share
 // of the radius. Polar approximations of Material 3 Expressive's shapes.
@@ -51,14 +53,46 @@ class ShapeBadge extends St.DrawingArea {
         this._lobes = 0;
         this._depth = 0;
         this._color = null;
+        this._turn = 0;
+        this._drift = 0;
+        this._tickedAt = null;
         // Only the depth glides; a change of the number of lobes shows by
         // the shape flattening and swelling again.
         this._glide = new Glide(this, depth => {
             this._depth = depth / 1000;
             this.queue_repaint();
-        });
+        }, {origin: 0, least: 1});
+        // With each new step the shape turns on by one lobe.
+        this._turning = new Glide(this, turn => {
+            this._turn = turn / 1000;
+            this.queue_repaint();
+        }, {least: 1});
+        this._turning.to(0);
         this.connect('repaint', () => this._draw());
-        this.connect('destroy', () => this._glide.stop());
+        this.connect('destroy', () => {
+            this._glide.stop();
+            this._turning.stop();
+        });
+    }
+
+    replay() {
+        this._glide.replay();
+    }
+
+    // A round shape shows no turning, so it is left alone.
+    moving(ambient) {
+        return ambient && this._lobes > 0;
+    }
+
+    tick(seconds) {
+        const passed = this._tickedAt === null ? 0 : Math.min(0.1, seconds - this._tickedAt);
+        this._tickedAt = seconds;
+        this._drift = (this._drift + passed / TURN_SECONDS) % 1;
+        this.queue_repaint();
+    }
+
+    rest() {
+        this._tickedAt = null;
     }
 
     // level: 0–1, which of the five steps. tone: "primary", "warn" or "bad".
@@ -66,9 +100,18 @@ class ShapeBadge extends St.DrawingArea {
         const steps = MOODS[this._mood];
         const step = steps[Math.min(steps.length - 1, Math.max(0, Math.floor((level ?? 0) * steps.length)))];
         this._tone = tone;
+        const changed = step[0] !== this._lobes;
+        const first = this._step === undefined;
+        this._step = step;
         this._lobes = step[0];
+        if (changed && !first && livelyEnabled()) {
+            // Other lobes: it swells into them from flat, turning as it does.
+            this._glide.to(null);
+            this._turning.to((this._turning.target ?? 0) + 1000 / Math.max(1, step[0]));
+        }
         this._glide.to(step[1] * 1000);
         this.queue_repaint();
+        this.onMotionChange?.();
     }
 
     // A fixed colour instead of a tone, such as the sun's.
@@ -81,7 +124,8 @@ class ShapeBadge extends St.DrawingArea {
         const cr = this.get_context();
         const [width, height] = this.get_surface_size();
         setSource(cr, this._color ?? toneColor(this._theme, this._tone, this._accent));
-        scallop(cr, width / 2, height / 2, Math.min(width, height) / 2, this._lobes, this._depth);
+        scallop(cr, width / 2, height / 2, Math.min(width, height) / 2, this._lobes, Math.max(0, this._depth),
+            (this._turn + this._drift) * TURN);
         cr.fill();
         cr.$dispose();
     }

@@ -3,6 +3,7 @@ import {WEEKDAYS} from '../../lib/calendar.js';
 import * as Format from '../../lib/format.js';
 import * as Weather from '../../lib/weather.js';
 import {Meter} from '../meter.js';
+import {count, pop} from '../motion.js';
 import {colors} from '../../lib/tokens.js';
 import {CENTER, END, badge, column, gauge, hint, icon, row, spacer} from '../parts.js';
 import {SunArc} from '../sunarc.js';
@@ -48,8 +49,12 @@ function summary(ctx) {
     const show = ({place: where, forecast}) => {
         const now = Weather.condition(forecast.current.code, forecast.current.isDay);
         place.text = where.name;
-        temperature.text = Format.degrees(forecast.current.temperature);
-        symbol.icon_name = now.icon;
+        count(temperature, Format.degrees(forecast.current.temperature));
+        // Other weather: its symbol swells in.
+        if (symbol.icon_name !== now.icon) {
+            symbol.icon_name = now.icon;
+            pop(mark ? mark.actor : symbol);
+        }
         if (mark) {
             const sunny = forecast.current.isDay && forecast.current.code <= 1;
             mark.show(sunny ? 0.7 : 0.3, 'primary');
@@ -201,7 +206,7 @@ function buildAir(ctx) {
             return;
         const {air} = data;
         place.text = small ? `Air · ${air.name}` : `Air in ${data.place.name}`;
-        mark.label.text = String(air.index);
+        count(mark.label, String(air.index));
         if (ctx.expressive)
             mark.show(Math.min(0.99, air.share), air.tone);
         else

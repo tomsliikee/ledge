@@ -6,9 +6,12 @@ import Clutter from 'gi://Clutter';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
+import {Glide} from './motion.js';
 import {fraction, setSource, toneColor} from './paint.js';
 
 const TRACK_ALPHA = 0.22;
+// How long the ripple of a wavy ring takes to travel one wave on.
+const RIPPLE_SECONDS = 2.4;
 
 export const Ring = GObject.registerClass(
 class Ring extends St.DrawingArea {
@@ -25,12 +28,33 @@ class Ring extends St.DrawingArea {
         this._accent = accent;
         this._percent = null;
         this._tone = 'primary';
+        this._phase = 0;
+        // The ring fills from empty when it comes into view.
+        this._glide = new Glide(this, value => {
+            this._percent = value;
+            this.queue_repaint();
+        }, {origin: 0});
         this.connect('repaint', () => this._draw());
+        this.connect('destroy', () => this._glide.stop());
     }
 
     set(percent, tone) {
-        this._percent = percent;
         this._tone = tone;
+        this._glide.to(percent ?? null);
+        this.queue_repaint();
+    }
+
+    replay() {
+        this._glide.replay();
+    }
+
+    // Only a wavy ring has something that moves on its own.
+    moving(ambient) {
+        return ambient && this._wavy && this._percent > 0;
+    }
+
+    tick(seconds) {
+        this._phase = (seconds / RIPPLE_SECONDS) % 1;
         this.queue_repaint();
     }
 
@@ -49,7 +73,7 @@ class Ring extends St.DrawingArea {
         const end = value * 2 * Math.PI;
         cr.setLineJoin(Cairo.LineJoin.ROUND);
         for (let angle = 0; angle <= end; angle += 0.03) {
-            const r = radius - amplitude + amplitude * Math.sin(waves * angle);
+            const r = radius - amplitude + amplitude * Math.sin(waves * angle - this._phase * 2 * Math.PI);
             const x = cx + r * Math.sin(angle);
             const y = cy - r * Math.cos(angle);
             if (angle === 0)
@@ -74,6 +98,7 @@ class Ring extends St.DrawingArea {
         cr.arc(width / 2, height / 2, radius, 0, 2 * Math.PI);
         cr.stroke();
 
+        // A spring may carry the value a little past full; the ring stops there.
         const value = fraction(this._percent);
         if (value > 0) {
             setSource(cr, toneColor(this._theme, this._tone, this._accent));

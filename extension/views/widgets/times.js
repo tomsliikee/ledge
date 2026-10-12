@@ -8,6 +8,7 @@ import * as Format from '../../lib/format.js';
 import * as Pomodoro from '../../lib/pomodoro.js';
 import * as Timer from '../../lib/timer.js';
 import {describeOffset, zoneTime} from '../../lib/zones.js';
+import {count, pop, roll} from '../motion.js';
 import {CENTER, START, badge, column, gauge, hint, iconButton, row, spacer} from '../parts.js';
 import {text} from '../text.js';
 import {WavyProgress} from '../wavy.js';
@@ -29,7 +30,7 @@ function buildWorld(ctx) {
         const clock = row({gap: 'lg-row-tight', children: [time, ctx.twelveHour ? period : null]});
         const show = now => {
             const there = zoneTime(now, city.timezone);
-            time.text = there ? Format.clock(there.hours, there.minutes, ctx.twelveHour) : Format.percent(null);
+            roll(time, there ? Format.clock(there.hours, there.minutes, ctx.twelveHour) : Format.percent(null));
             period.text = there && there.hours >= 12 ? 'pm' : 'am';
             offset.text = there ? describeOffset(there) : 'Unknown time zone';
         };
@@ -45,6 +46,14 @@ function buildWorld(ctx) {
 }
 
 export const worldclock = buildWorld;
+
+// Changes the symbol on a button, which swells as it does.
+function swap(button, name) {
+    if (button.child.icon_name === name)
+        return;
+    button.child.icon_name = name;
+    pop(button.child);
+}
 
 // Kept outside the widget, so a running timer survives a new size, new
 // colours and the lock screen.
@@ -82,7 +91,9 @@ function buildTimer(ctx) {
             state = Timer.pause(state, state.startedAt + state.duration - state.elapsed);
         time.text = Format.stopwatch(Timer.shown(state, now) + (mode === 'timer' ? 999 : 0));
         progress?.set(100 * Timer.progress(state, now), 'primary');
-        toggle.child.icon_name = Timer.isRunning(state) ? 'media-playback-pause-symbolic' : 'media-playback-start-symbolic';
+        // The wave travels while the time runs.
+        progress?.setRunning(Timer.isRunning(state));
+        swap(toggle, Timer.isRunning(state) ? 'media-playback-pause-symbolic' : 'media-playback-start-symbolic');
     };
 
     // The seconds are only asked for while something runs.
@@ -193,6 +204,7 @@ function buildPomodoro(ctx) {
 
     let stopTicking = null;
     let alarm = 0;
+    let shownPhase = null;
     const views = pomodoroViews.get(ctx.id) ?? new Set();
     pomodoroViews.set(ctx.id, views);
     const announces = views.size === 0;
@@ -209,9 +221,13 @@ function buildPomodoro(ctx) {
             mark.show(Math.min(0.99, done), 'primary');
         else
             mark.ring.set(100 * done, 'primary');
-        phase.text = PHASES[state.phase];
+        // A new phase: the face swells once and its name rolls over.
+        if (shownPhase !== null && shownPhase !== state.phase)
+            pop(mark.actor, 0.8, 'spatial');
+        shownPhase = state.phase;
+        roll(phase, PHASES[state.phase]);
         round.text = `Round ${state.round} of ${ROUNDS}`;
-        toggle.child.icon_name = Timer.isRunning(timer) ? 'media-playback-pause-symbolic' : 'media-playback-start-symbolic';
+        swap(toggle, Timer.isRunning(timer) ? 'media-playback-pause-symbolic' : 'media-playback-start-symbolic');
     };
 
     const sync = () => {
@@ -298,7 +314,7 @@ function buildCountdown(ctx) {
     }
     ctx.watch('minute', now => {
         const left = Format.daysBetween([now.getFullYear(), now.getMonth() + 1, now.getDate()], target);
-        number.text = String(Math.abs(left));
+        count(number, String(Math.abs(left)));
         mark?.show(Math.min(0.99, Math.abs(left) / FAR_DAYS), 'primary');
         unit.text = left === 0 ? 'Today' : `${Math.abs(left) === 1 ? 'day' : 'days'} ${left > 0 ? 'to go' : 'ago'}`;
     });
