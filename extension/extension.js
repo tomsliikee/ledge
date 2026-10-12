@@ -34,7 +34,7 @@ export default class LedgeExtension extends Extension {
             onIdle: () => this._manager.updateLive(),
             onActive: () => this._manager.updateLive(),
         });
-        this._manager = new Manager({store: this._store, hub: this._hub, idle: this._idle});
+        this._manager = new Manager({store: this._store, hub: this._hub, idle: this._idle, power: this._power});
         this._edit = new EditMode({manager: this._manager, store: this._store});
 
         const hold = () => this._manager.overlay.pinned ? this._manager.hide() : this._manager.show(true);

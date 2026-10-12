@@ -14,7 +14,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {STARTERS, catalog} from '../lib/catalog.js';
 import * as Layout from '../lib/layout.js';
 import {snap} from '../lib/snap.js';
-import {coveredMonitors} from '../lib/visibility.js';
+import {coveredMonitors, shownWidgets} from '../lib/visibility.js';
 import * as Monitors from './monitors.js';
 import {LAYOUT_MS, STATE_MS, ease, setMotion} from './motion.js';
 import {Overlay} from './overlay.js';
@@ -29,7 +29,8 @@ const APPEAR_SCALE = 0.96;
 const APPEAR_RISE = 12;
 
 export class Manager {
-    constructor({store, hub, idle}) {
+    constructor({store, hub, idle, power}) {
+        this._power = power;
         this._store = store;
         this._hub = hub;
         this._idle = idle;
@@ -78,6 +79,9 @@ export class Manager {
         this._connect(global.window_manager, 'minimize', () => this._queueRecount());
         this._connect(global.window_manager, 'switch-workspace', () => this._queueRecount());
 
+        // Widgets may be set to step aside on battery.
+        this._stopPower = power.listen(() => this._sync());
+
         store.onChange(key => {
             if (key === 'widgets' || key === 'screens')
                 this._sync();
@@ -105,6 +109,10 @@ export class Manager {
 
     get theme() {
         return this._theme;
+    }
+
+    get hasBattery() {
+        return this._power.battery?.present === true;
     }
 
     get tiles() {
@@ -158,7 +166,7 @@ export class Manager {
         const primary = Monitors.primaryIndex();
         const screens = this._store.screens;
         const wanted = new Map();
-        for (const widget of this._store.widgets.filter(w => w.enabled)) {
+        for (const widget of shownWidgets(this._store.widgets, {onBattery: this._power.onBattery})) {
             if (screens === 'mirror') {
                 for (const monitor of Main.layoutManager.monitors)
                     wanted.set(`${widget.id}@${monitor.index}`, {widget, index: monitor.index});
@@ -464,6 +472,7 @@ export class Manager {
     }
 
     destroy() {
+        this._stopPower();
         if (this._recount)
             GLib.source_remove(this._recount);
         if (this._drag)

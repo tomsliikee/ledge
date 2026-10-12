@@ -274,6 +274,11 @@ export class EditMode {
             }
         }
 
+        if (this._manager.hasBattery) {
+            rows.push(switchItem('Hide on battery', 'Steps aside while the machine is not plugged in.', this._manager.theme,
+                options.hideOnBattery === true, on => this._setOption(widget.id, {hideOnBattery: on})));
+        }
+
         rows.push(itemButton('Remove', null, () => {
             const id = widget.id;
             this._select(null);

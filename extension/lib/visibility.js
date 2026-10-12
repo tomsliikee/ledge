@@ -10,3 +10,9 @@ export function coveredMonitors(windows) {
     }
     return covered;
 }
+
+// The widgets that get a tile: those switched on, less the ones asked to
+// step aside while the machine runs on its battery.
+export function shownWidgets(widgets, {onBattery}) {
+    return widgets.filter(widget => widget.enabled && !(onBattery && widget.options.hideOnBattery === true));
+}

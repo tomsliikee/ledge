@@ -1,5 +1,6 @@
 import {test, equal, done} from './harness.js';
 import * as Calendar from '../extension/lib/calendar.js';
+import {shownWidgets} from '../extension/lib/visibility.js';
 import * as Timer from '../extension/lib/timer.js';
 
 test('october 2026 starts on a thursday and has five weeks', () => {
@@ -48,6 +49,16 @@ test('a stopwatch counts up and never finishes', () => {
 test('reset clears the time and stops', () => {
     const timer = Timer.reset(Timer.start(Timer.create('timer', 5000), 0));
     equal([Timer.isRunning(timer), Timer.shown(timer, 3000)], [false, 5000]);
+});
+
+test('a widget set to hide on battery steps aside only there', () => {
+    const widgets = [
+        {id: 'a', enabled: true, options: {}},
+        {id: 'b', enabled: true, options: {hideOnBattery: true}},
+        {id: 'c', enabled: false, options: {}},
+    ];
+    equal(shownWidgets(widgets, {onBattery: false}).map(w => w.id), ['a', 'b']);
+    equal(shownWidgets(widgets, {onBattery: true}).map(w => w.id), ['a']);
 });
 
 done('misc');
