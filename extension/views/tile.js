@@ -9,7 +9,7 @@ import St from 'gi://St';
 
 import {SIZES} from '../lib/layout.js';
 import {sizes} from '../lib/tokens.js';
-import {ambientEnabled, livelyEnabled, springTo} from './motion.js';
+import {ambientEnabled, livelyEnabled, pop, springTo} from './motion.js';
 
 // What moves on its own is drawn this often: enough for slow turning and
 // travelling waves, at half the cost of every frame.
@@ -17,6 +17,8 @@ const FRAME_SECONDS = 1 / 30;
 // The dot of the widget that shows stretches into a pill of this height.
 const DOT = 6;
 const DOT_ON = 14;
+// What the content of a tile swells to when it cheers; within its padding.
+const CHEER_SCALE = 1.04;
 
 export const Tile = GObject.registerClass(
 class Tile extends St.Widget {
@@ -71,6 +73,7 @@ class Tile extends St.Widget {
             act: (key, command) => this._services.hub.act(key, command),
             setOptions: (patch, rebuild = true) => this._services.setOptions(this, patch, rebuild),
             notify: (title, body) => this._services.notify(title, body),
+            cheer: () => this.cheer(),
             // A widget with nothing to show on this machine steps aside.
             hide: hidden => {
                 this.visible = !hidden;
@@ -134,6 +137,17 @@ class Tile extends St.Widget {
             actor.get_children().forEach(visit);
         };
         this.get_children().forEach(visit);
+    }
+
+    // What the widget waited for has happened: its content swells once and
+    // its waves are stirred. The content, not the tile: the tile's own size
+    // answers the pointer.
+    cheer() {
+        if (!this._live || !livelyEnabled() || !this._view)
+            return;
+        pop(this._view.actor, CHEER_SCALE, 'bouncy');
+        for (const mark of this._marks)
+            mark.wave?.stir();
     }
 
     // Marks the tile as the top of a stack of count widgets, of which it is

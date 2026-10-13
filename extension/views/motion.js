@@ -2,8 +2,9 @@
 // switched off, or when they are switched off in Ledge's own settings.
 //
 // There are three steps of it. Motion: things glide instead of jumping.
-// Lively: they move on springs, fill up when they come into view and answer
-// a press. Ambient: shapes and waves keep moving while nothing happens.
+// Lively: they move on springs, fill up when they come into view, answer a
+// press, and a wave that shows a value travels. Ambient: shapes keep turning
+// while nothing happens.
 
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
@@ -16,6 +17,10 @@ export const LAYOUT_MS = 320;
 
 // In the units of what glides: per cent of a ring.
 const SMALLEST_GLIDE = 2;
+// Lines that come in one after the other: how far each rises, and how long
+// after the one before it sets out.
+const CASCADE_RISE = 8;
+const CASCADE_GAP_MS = 30;
 // How far a label travels when its content rolls over, as a share of its height.
 const ROLL = 0.35;
 const PRESSED_SCALE = 0.9;
@@ -254,6 +259,47 @@ export function count(label, content) {
         label.text = content;
     else
         run(from);
+}
+
+// Sets a label that count() looks after to a reading at once, so the next
+// count starts from what is shown.
+export function setNow(label, content) {
+    label._lgCount?.stop();
+    label._lgCount = null;
+    label._lgShown = content;
+    label.text = content;
+}
+
+// Lets lines come in one after the other, each rising into its place.
+// The lines must outlive the motion, or stopCascade() be called first.
+export function cascade(actors) {
+    const [first] = actors;
+    if (!livelyEnabled() || !first?.get_stage())
+        return;
+    stopCascade(first);
+    const at = elapsed => actors.forEach((actor, i) => {
+        const seconds = (elapsed - i * CASCADE_GAP_MS) / 1000;
+        actor.opacity = Math.round(255 * springAt(seconds, SPRINGS.effect));
+        actor.translation_y = CASCADE_RISE * (1 - springAt(seconds, SPRINGS.spatial));
+    });
+    const settle = () => actors.forEach(actor => actor.set({opacity: 255, translation_y: 0}));
+    const duration = settleMs(SPRINGS.spatial) + CASCADE_GAP_MS * (actors.length - 1);
+    const timeline = new Clutter.Timeline({actor: first, duration});
+    timeline.set_progress_mode(Clutter.AnimationMode.LINEAR);
+    timeline.connect('new-frame', () => at(timeline.get_elapsed_time()));
+    timeline.connect('completed', settle);
+    if (!first._lgCascadeGuard)
+        first._lgCascadeGuard = first.connect('destroy', () => stopCascade(first));
+    first._lgCascade = timeline;
+    at(0);
+    timeline.start();
+}
+
+// first: the first of the lines cascade() was given.
+export function stopCascade(first) {
+    first?._lgCascade?.stop();
+    if (first)
+        first._lgCascade = null;
 }
 
 // Sets a label to new content by letting the old roll out upwards and the

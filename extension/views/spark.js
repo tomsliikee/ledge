@@ -4,6 +4,7 @@ import Cairo from 'cairo';
 import GObject from 'gi://GObject';
 import St from 'gi://St';
 
+import {movedOn} from '../lib/hub.js';
 import {colors} from '../lib/tokens.js';
 import {Glide} from './motion.js';
 import {setSource, toneColor} from './paint.js';
@@ -27,11 +28,28 @@ class Spark extends St.DrawingArea {
             this._drawn = drawn / 100;
             this.queue_repaint();
         }, {origin: 0, spring: 'effectSlow'});
+        // How far, in steps, the line still is from its place after a new
+        // reading: it moves on by one instead of jumping. gone is the
+        // reading that left at the other end, drawn until it is out of view.
+        this._shift = 0;
+        this._gone = null;
+        this._shifting = new Glide(this, shift => {
+            this._shift = shift / 100;
+            this.queue_repaint();
+        }, {spring: 'effect', livelyOnly: true});
         this.connect('repaint', () => this._draw());
-        this.connect('destroy', () => this._glide.stop());
+        this.connect('destroy', () => {
+            this._glide.stop();
+            this._shifting.stop();
+        });
     }
 
     set(values, tone = 'primary') {
+        if (movedOn(this._values, values)) {
+            [this._gone] = this._values;
+            this._shifting.jump(100);
+            this._shifting.to(0);
+        }
         this._values = values;
         this._tone = tone;
         if (values.length > 1)
@@ -62,22 +80,27 @@ class Spark extends St.DrawingArea {
                 cr.rectangle(0, 0, width * this._drawn, height);
                 cr.clip();
             }
-            const max = this._max ?? Math.max(1, ...values);
+            const shift = this._shift;
+            // While it moves on, the line begins a step earlier, out of view.
+            const points = shift > 0 ? [this._gone, ...values] : values;
+            const first = shift > 0 ? shift - 1 : 0;
+            const max = this._max ?? Math.max(1, ...points);
             const step = width / (values.length - 1);
+            const x = i => (first + i) * step;
             const y = value => bottom - Math.min(1, Math.max(0, value / max)) * (height - STROKE);
             const trace = () => {
-                values.forEach((value, i) => {
+                points.forEach((value, i) => {
                     if (i === 0)
-                        cr.moveTo(0, y(value));
+                        cr.moveTo(x(i), y(value));
                     else
-                        cr.lineTo(i * step, y(value));
+                        cr.lineTo(x(i), y(value));
                 });
             };
             const color = toneColor(this._theme, this._tone, this._accent);
 
             trace();
-            cr.lineTo(width, height);
-            cr.lineTo(0, height);
+            cr.lineTo(x(points.length - 1), height);
+            cr.lineTo(x(0), height);
             cr.closePath();
             setSource(cr, color, FILL_ALPHA);
             cr.fill();

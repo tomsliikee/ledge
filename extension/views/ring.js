@@ -8,10 +8,11 @@ import St from 'gi://St';
 
 import {Glide} from './motion.js';
 import {fraction, setSource, toneColor} from './paint.js';
+import {Waving} from './waving.js';
 
 const TRACK_ALPHA = 0.22;
-// How long the ripple of a wavy ring takes to travel one wave on.
-const RIPPLE_SECONDS = 2.4;
+// A change of the value by less than this, in per cent, does not stir the ripple.
+const STIRRING_CHANGE = 1;
 
 export const Ring = GObject.registerClass(
 class Ring extends St.DrawingArea {
@@ -28,33 +29,49 @@ class Ring extends St.DrawingArea {
         this._accent = accent;
         this._percent = null;
         this._tone = 'primary';
-        this._phase = 0;
+        // The ripple of a wavy ring; a plain ring has nothing that travels.
+        this.wave = wavy ? new Waving(this, () => this.onMotionChange?.()) : null;
         // The ring fills from empty when it comes into view.
         this._glide = new Glide(this, value => {
             this._percent = value;
             this.queue_repaint();
         }, {origin: 0});
         this.connect('repaint', () => this._draw());
-        this.connect('destroy', () => this._glide.stop());
+        this.connect('destroy', () => {
+            this._glide.stop();
+            this.wave?.stop();
+        });
     }
 
     set(percent, tone) {
+        const before = this._glide.target;
         this._tone = tone;
         this._glide.to(percent ?? null);
+        // A ripple that runs already shows that its value is changing.
+        if (!this.wave?.running && before !== null && Math.abs((percent ?? before) - before) >= STIRRING_CHANGE)
+            this.wave?.stir();
         this.queue_repaint();
+        this.onMotionChange?.();
     }
 
     replay() {
         this._glide.replay();
+        this.wave?.replay();
     }
 
-    // Only a wavy ring has something that moves on its own.
-    moving(ambient) {
-        return ambient && this._wavy && this._percent > 0;
+    // Only a wavy ring has something that moves on its own, and it does for
+    // as long as it is seen. Asked of the value it is on its way to.
+    moving() {
+        return Boolean(this.wave?.moving) && this._glide.target > 0;
     }
 
     tick(seconds) {
-        this._phase = (seconds / RIPPLE_SECONDS) % 1;
+        if (this.wave.tick(seconds))
+            this.queue_repaint();
+    }
+
+    rest() {
+        this.wave?.rest();
         this.queue_repaint();
     }
 
@@ -69,11 +86,11 @@ class Ring extends St.DrawingArea {
         // Shallow and close together, so it reads as a ring that ripples
         // and keeps clear of what is written inside.
         const waves = Math.max(8, Math.round(radius / 2.4));
-        const amplitude = this._stroke * 0.2;
+        const amplitude = this._stroke * 0.2 * this.wave.swell;
         const end = value * 2 * Math.PI;
         cr.setLineJoin(Cairo.LineJoin.ROUND);
         for (let angle = 0; angle <= end; angle += 0.03) {
-            const r = radius - amplitude + amplitude * Math.sin(waves * angle - this._phase * 2 * Math.PI);
+            const r = radius - amplitude + amplitude * Math.sin(waves * angle - this.wave.phase * 2 * Math.PI);
             const x = cx + r * Math.sin(angle);
             const y = cy - r * Math.cos(angle);
             if (angle === 0)

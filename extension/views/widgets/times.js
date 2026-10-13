@@ -9,7 +9,7 @@ import * as Pomodoro from '../../lib/pomodoro.js';
 import * as Timer from '../../lib/timer.js';
 import {describeOffset, zoneTime} from '../../lib/zones.js';
 import {count, pop, roll} from '../motion.js';
-import {CENTER, START, badge, column, gauge, hint, iconButton, row, spacer} from '../parts.js';
+import {CENTER, START, badge, column, gauge, hint, iconButton, row, spacer, swap} from '../parts.js';
 import {text} from '../text.js';
 import {WavyProgress} from '../wavy.js';
 
@@ -47,14 +47,6 @@ function buildWorld(ctx) {
 
 export const worldclock = buildWorld;
 
-// Changes the symbol on a button, which swells as it does.
-function swap(button, name) {
-    if (button.child.icon_name === name)
-        return;
-    button.child.icon_name = name;
-    pop(button.child);
-}
-
 // Kept outside the widget, so a running timer survives a new size, new
 // colours and the lock screen.
 const timers = new Map();
@@ -62,6 +54,8 @@ const timers = new Map();
 const timerViews = new Map();
 const MINUTE = 60 * 1000;
 const PRESETS = [5, 15, 25, 45];
+// A time that changes by more than this at once was set, not counted down.
+const JUMP_MS = 1500;
 
 function buildTimer(ctx) {
     const mode = ctx.options.mode === 'stopwatch' ? 'stopwatch' : 'timer';
@@ -80,6 +74,7 @@ function buildTimer(ctx) {
 
     let stopTicking = null;
     let alarm = 0;
+    let shown = null;
     const views = timerViews.get(ctx.id) ?? new Set();
     timerViews.set(ctx.id, views);
     // Only the first view announces the end; the others would repeat it.
@@ -87,9 +82,18 @@ function buildTimer(ctx) {
 
     const show = () => {
         const now = Date.now();
-        if (Timer.isFinished(state, now) && Timer.isRunning(state))
+        if (Timer.isFinished(state, now) && Timer.isRunning(state)) {
             state = Timer.pause(state, state.startedAt + state.duration - state.elapsed);
-        time.text = Format.stopwatch(Timer.shown(state, now) + (mode === 'timer' ? 999 : 0));
+            ctx.cheer();
+        }
+        const left = Timer.shown(state, now);
+        const content = Format.stopwatch(left + (mode === 'timer' ? 999 : 0));
+        // The seconds tick; a time that was set anew rolls over.
+        if (shown !== null && Math.abs(left - shown) > JUMP_MS)
+            roll(time, content);
+        else
+            time.text = content;
+        shown = left;
         progress?.set(100 * Timer.progress(state, now), 'primary');
         // The wave travels while the time runs.
         progress?.setRunning(Timer.isRunning(state));
@@ -222,8 +226,10 @@ function buildPomodoro(ctx) {
         else
             mark.ring.set(100 * done, 'primary');
         // A new phase: the face swells once and its name rolls over.
-        if (shownPhase !== null && shownPhase !== state.phase)
+        if (shownPhase !== null && shownPhase !== state.phase) {
             pop(mark.actor, 0.8, 'spatial');
+            ctx.cheer();
+        }
         shownPhase = state.phase;
         roll(phase, PHASES[state.phase]);
         round.text = `Round ${state.round} of ${ROUNDS}`;

@@ -1,7 +1,7 @@
 import St from 'gi://St';
 
-import {livelyEnabled, pop, springTo} from '../motion.js';
-import {CENTER, END, FILL, column, hint, iconButton, row, spacer} from '../parts.js';
+import {livelyEnabled, springTo} from '../motion.js';
+import {CENTER, END, FILL, column, hint, iconButton, row, spacer, swap} from '../parts.js';
 import {text} from '../text.js';
 import {loadThumb} from '../thumb.js';
 import {WavyProgress} from '../wavy.js';
@@ -64,11 +64,7 @@ function build(ctx) {
             return;
         title.text = player.title ?? 'Unknown title';
         artist.text = player.artist ?? '';
-        const symbol = player.playing ? 'media-playback-pause-symbolic' : 'media-playback-start-symbolic';
-        if (play.child.icon_name !== symbol) {
-            play.child.icon_name = symbol;
-            pop(play.child);
-        }
+        swap(play, player.playing ? 'media-playback-pause-symbolic' : 'media-playback-start-symbolic');
         wave?.setRunning(player.playing);
         wave?.setFlat(!player.playing);
         previous.visible = player.canPrevious;

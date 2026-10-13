@@ -41,7 +41,7 @@ The values in the screenshots are those of the laptop they were taken on; the we
 - **Several Screens:** Each screen has **its own** widgets, or all widgets are **mirrored** on every screen, or they show on the **main screen only**.
 - **Two Looks:** **Expressive**, with tiles in the tones of the colour scheme and values on shapes that grow with them, or **calm**, with neutral tiles and colour only in rings and lines. One switch changes all widgets.
 - **Five Colour Styles and the Wallpaper's:** **Blue**, **violet**, **green**, **orange** and **pink**, each in light and dark, following the system's colour scheme. A sixth style takes its colours **from the wallpaper** and changes with it.
-- **Motion in Three Steps:** **Motion** lets things glide instead of jump. **Expressive motion** puts them on springs: the widgets swing in as one sheet, rings fill up and numbers count as they arrive, a tile gives way under the press, a wave travels while a timer or music runs. **Always moving** keeps shapes turning and waves travelling while nothing happens. Each step has its own switch.
+- **Motion in Three Steps:** **Motion** lets things glide instead of jump. **Expressive motion** puts them on springs: the widgets swing in as one sheet, rings fill up and numbers count as they arrive, a tile gives way under the press, and a wave that shows a value travels for as long as it is seen: faster while a timer or music runs, forward while the battery charges and back while it drains. Charts move on by a step, lists come in line by line, and a widget cheers when its timer ends. **Always moving** keeps shapes turning while nothing happens. Each step has its own switch.
 - **Carried Along:** The arrangement, the look and the place of the weather are saved to one file and loaded on another machine.
 - **Quiet When Unseen:** Readings stop behind maximised windows, in the overview and after **20 minutes** without input; on battery every interval doubles.
 
@@ -118,7 +118,7 @@ In this picture the calendar entries and the brightness are stood in for: the sh
 - **The Selected One:** Click a widget to choose its **size** and what is particular to it: the clock's face, a countdown's date, the cities of a world clock, a photo's folder.
 - **Stacks:** Drag a widget onto the middle of another whose size it offers and it is laid on top. The panel lists the widgets of the selected stack and takes one out again.
 - **On Battery:** On a machine with a battery, each widget can be set to step aside while it is unplugged.
-- **Look:** One of five colours, the **expressive** or the calm look, **see-through** tiles that let the wallpaper show, and the three switches for **motion**: at all, on springs, and always moving. What always moves is drawn **30** times a second while it is in view, and rests on battery.
+- **Look:** One of five colours, the **expressive** or the calm look, **see-through** tiles that let the wallpaper show, and the three switches for **motion**: at all, on springs, and always moving. A calm wave is drawn **15** times a second while it is in view, a running one and what always moves **30** times. What always moves rests on battery; the waves do not.
 - **Screens:** With more than one screen, the choice between **own**, **mirrored** and **main only**. With own layouts, a widget dragged to another screen belongs to it; when that screen is unplugged the widget shows on the main one and returns later.
 - **Also as a Window:** The same settings are in the extension's ordinary **settings window**; both write to the same place. The shortcut is recorded there, and the arrangement is saved to a file and loaded from one.
 
@@ -140,7 +140,7 @@ A source runs only while a widget that needs it can be seen, and several widgets
 | **Battery, media, Tally's limits, calendar, volume, brightness** | Only when they change | Same |
 
 - **Unseen Means Stopped:** A maximised or full-screen window on a screen stops the widgets of that screen. So do the overview and **20 minutes** without keyboard or pointer input. On the lock screen GNOME switches the extension off.
-- **Measured:** In a headless GNOME Shell on an **Intel Core i5-8350U**, the four starting widgets cost about **1.8 %** of one core with motion and **0.8 %** without; with nothing in view the shell stayed at its own **0.25 %**. A real screen was not measured.
+- **Measured:** In a headless GNOME Shell on an **Intel Core i5-8350U**, the four starting widgets cost about **1.8 %** of one core with motion and **0.8 %** without; with nothing in view the shell stayed at its own **0.25 %**. Nine widgets on battery, four of them with a travelling wave, cost about **15.9 %** with expressive motion and **1.9 %** without. A real screen was not measured.
 - **Kept Off the Shell's Thread:** Ranking the processes means reading a file for each of them, about **25 ms** in all, so a helper process does it. `nvidia-smi` runs once and keeps reporting instead of being started every two seconds.
 
 ---
@@ -213,7 +213,7 @@ node tools/build-tokens.js
 
 ## How It Works
 
-Three layers: **sources** that read, **pure logic** that runs outside the shell and is covered by **116** unit tests, and **views** drawn with **St** and **Cairo**.
+Three layers: **sources** that read, **pure logic** that runs outside the shell and is covered by **124** unit tests, and **views** drawn with **St** and **Cairo**.
 
 ```mermaid
 flowchart TD
@@ -297,7 +297,7 @@ flowchart TD
 
 | Part | State | How |
 | :--- | :--- | :--- |
-| **Parsing, formatting, layout, snapping, stacks, time zones, timer, pomodoro, tasks, backup, air, agenda, colour schemes, springs** | *tested* | 116 unit tests |
+| **Parsing, formatting, layout, snapping, stacks, time zones, timer, pomodoro, tasks, backup, air, agenda, colour schemes, springs, waves** | *tested* | 124 unit tests |
 | **All twenty-six widgets, every size, light and dark, both looks** | *tested* | Rendered in a headless GNOME Shell 50.5 with this laptop's real readings. The warning and error colours on shapes were not seen: no reading was that high |
 | **Weather** | *tested* | A real forecast for Vienna from Open-Meteo on 2026-10-12. The place search was not run from the panel |
 | **Dragging and snapping** | *tested* | With a virtual pointer in the headless shell; the stored place lay on the grid |
@@ -321,7 +321,7 @@ flowchart TD
 | **GPU on NVIDIA and AMD** | *built* | Only the parser of the `nvidia-smi` line is tested; no such card was at hand |
 | **Now playing** | *built* | Rendered with nothing playing; no player was run |
 | **Half pace on battery** | *built* | Not observed switching |
-| **Motion** | *tested* | In the headless shell, by reading the values while they moved: the sheet of widgets passed its size and settled, a ring was part of the way 70 ms in, a pressed tile and button shrank and came back, a stack's dot stretched, ticked tasks glided to their places, the wave travelled while a timer and a stood-in player ran and stopped with them, shapes turned only with **Always moving** on, and nothing of it happened with the switches off. How it looks and feels on a real screen was not watched; the cost of **Always moving** was not measured |
+| **Motion** | *tested* | In the headless shell, by reading the values while they moved: the sheet of widgets passed its size and settled, a ring was part of the way 70 ms in, a pressed tile and button shrank and came back, a stack's dot stretched, ticked tasks glided to their places, the wave travelled while a timer and a stood-in player ran and stopped with them, shapes turned only with **Always moving** on, and nothing of it happened with the switches off. With the battery stood in for: its wave travelled back while it drained and forward, faster, while it charged, sank to half its height at 8 %, and was stirred by a new reading; a chart moved on by a step, processes rolled over, entries came in one after the other, a picture faded in, and the content swelled when a timer ended and when the power was plugged in. Counting network rates, volume and brightness is *built*, not run. How it looks and feels on a real screen was not watched |
 | **Typing a note** | *built* | Rendered with text; typing needs a real keyboard |
 
 Ledge places its widgets in the shell's background group, which is not a public interface of GNOME Shell and may change with a new version. The same holds for the three readings it takes from the shell: the date menu's calendar entries, the sound control and the brightness control. Those are kept in one file, `extension/lib/sources/shell.js`.

@@ -83,7 +83,7 @@ function lookGroup(store) {
     });
     const lively = new Adw.SwitchRow({
         title: 'Expressive motion',
-        subtitle: 'Springs that swing past and settle, rings that fill up as they arrive, numbers that count.',
+        subtitle: 'Springs that swing past and settle, rings that fill up as they arrive, numbers that count, waves that travel.',
     });
     lively.connect('notify::active', () => {
         if (lively.active !== store.livelyMotion)
@@ -91,7 +91,7 @@ function lookGroup(store) {
     });
     const ambient = new Adw.SwitchRow({
         title: 'Always moving',
-        subtitle: 'Shapes turn and waves travel while nothing happens. Redraws the widgets all the time, so it rests on battery.',
+        subtitle: 'Shapes turn and the sun glows while nothing happens. Redraws the widgets all the time, so it rests on battery.',
     });
     ambient.connect('notify::active', () => {
         if (ambient.active !== store.ambientMotion)

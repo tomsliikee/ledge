@@ -20,11 +20,11 @@
     </key>
     <key name="lively-motion" type="b">
       <default>true</default>
-      <summary>Move on springs, fill up on arrival and answer a press</summary>
+      <summary>Move on springs, fill up on arrival, answer a press and let waves travel</summary>
     </key>
     <key name="ambient-motion" type="b">
       <default>true</default>
-      <summary>Keep shapes and waves moving while nothing happens</summary>
+      <summary>Keep shapes moving while nothing happens</summary>
     </key>
     <key name="expressive" type="b">
       <default>true</default>

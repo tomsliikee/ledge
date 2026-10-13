@@ -1,4 +1,5 @@
 import {test, equal, done} from './harness.js';
+import {movedOn} from '../extension/lib/hub.js';
 import * as Calendar from '../extension/lib/calendar.js';
 import {shownWidgets} from '../extension/lib/visibility.js';
 import * as Pomodoro from '../extension/lib/pomodoro.js';
@@ -108,6 +109,14 @@ test('tasks are added trimmed, ticked off and cleared', () => {
 test('a damaged list of tasks is read as far as it makes sense', () => {
     equal(Tasks.parse('x'), []);
     equal(Tasks.parse([{text: 'A'}, null, {text: ''}, {done: true}]), [{text: 'A', done: false}]);
+});
+
+test('a history has moved on when the oldest left and one reading came', () => {
+    equal(movedOn([1, 2, 3], [2, 3, 9]), true);
+    equal(movedOn([1, 2, 3], [1, 2, 3]), false);
+    equal(movedOn([1, 2], [1, 2, 3]), false);
+    equal(movedOn([], []), false);
+    equal(movedOn([5, 5, 5], [5, 5, 5]), true);
 });
 
 done('misc');

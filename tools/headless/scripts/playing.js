@@ -20,13 +20,13 @@ export default async function ({manager, store, hub, shot, sleep, note}) {
     const frames = () => manager.tiles.filter(tile => tile._frames).map(tile => tile.widget.id).join(', ');
 
     say(true); await sleep(900);
-    const phase = waves()[0]._phase;
+    const phase = waves()[0].wave.phase;
     await sleep(500);
-    note(`playing: ${waves().length} waves, frames [${frames()}], swell ${waves()[0]._swell.toFixed(2)}, ` +
-        `moved ${((waves()[0]._phase - phase + 1) % 1).toFixed(2)} of a wavelength`);
+    note(`playing: ${waves().length} waves, frames [${frames()}], swell ${waves()[0].wave.swell.toFixed(2)}, ` +
+        `moved ${((waves()[0].wave.phase - phase + 1) % 1).toFixed(2)} of a wavelength`);
     await shot('playing-1');
     say(false); await sleep(1200);
-    note(`paused: frames [${frames()}], swell ${waves()[0]._swell.toFixed(2)}`);
+    note(`paused: frames [${frames()}], swell ${waves()[0].wave.swell.toFixed(2)}`);
     await shot('playing-2-paused');
 
     store.livelyMotion = false; await sleep(900);

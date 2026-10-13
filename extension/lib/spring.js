@@ -16,6 +16,8 @@ export const SPRINGS = {
     // The effect springs.
     effect: {damping: 1, stiffness: 1600},
     effectSlow: {damping: 1, stiffness: 800},
+    // For what dies down rather than arrives: a wave that was stirred.
+    calm: {damping: 1, stiffness: 100},
 };
 
 // Below this share of the way, what is left of the swing cannot be seen.

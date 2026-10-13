@@ -4,6 +4,7 @@ import St from 'gi://St';
 import {dayName, upcoming} from '../../lib/agenda.js';
 import {MONTHS, WEEKDAYS, WEEKDAYS_LONG, monthGrid, weekday} from '../../lib/calendar.js';
 import * as Format from '../../lib/format.js';
+import {cascade, stopCascade} from '../motion.js';
 import {CENTER, START, badge, column, hint, row} from '../parts.js';
 import {text} from '../text.js';
 
@@ -89,6 +90,7 @@ function buildEvents(ctx) {
     const list = column({gap: 'lg-stack', y: START});
     const message = hint('');
     let reading = null;
+    let shown = null;
 
     const clock = ms => {
         const date = new Date(ms);
@@ -100,6 +102,7 @@ function buildEvents(ctx) {
             return;
         const now = Date.now();
         const ahead = upcoming(reading.events, now);
+        stopCascade(list.get_first_child());
         list.destroy_all_children();
         list.visible = ahead.length > 0;
         message.visible = ahead.length === 0;
@@ -121,7 +124,14 @@ function buildEvents(ctx) {
             list.add_child(row({gap: 'lg-row-tight', children: [when, text('body-strong', {expand: true, content: event.summary})]}));
             left--;
         }
+        // Other entries than before come in one after the other; a minute
+        // that only passed changes none of them.
+        const entries = JSON.stringify(ahead.map(event => [event.day, event.start, event.summary]));
+        if (shown !== null && entries !== shown)
+            cascade(list.get_children());
+        shown = entries;
     };
+    list.replay = () => cascade(list.get_children());
     ctx.watch('events', data => {
         reading = data;
         render();

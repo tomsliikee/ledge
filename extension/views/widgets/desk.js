@@ -8,7 +8,7 @@ import St from 'gi://St';
 
 import * as Format from '../../lib/format.js';
 import * as Tasks from '../../lib/tasks.js';
-import {livelyEnabled, pop, springTo} from '../motion.js';
+import {LAYOUT_MS, cascade, count, ease, livelyEnabled, pop, roll, springTo} from '../motion.js';
 import {CENTER, column, hint, icon, iconButton, row} from '../parts.js';
 import {text} from '../text.js';
 import {loadThumb} from '../thumb.js';
@@ -131,7 +131,14 @@ function buildTasks(ctx) {
 export const tasks = buildTasks;
 
 function buildPhoto(ctx) {
-    const picture = new St.Bin({style_class: 'lg-photo', x_expand: true, y_expand: true});
+    // Two of them, one over the other: the next picture fades in over the
+    // one that is shown.
+    const sheet = () => new St.Bin({style_class: 'lg-photo', x_expand: true, y_expand: true});
+    const picture = new St.Widget({layout_manager: new Clutter.BinLayout(), x_expand: true, y_expand: true});
+    let top = sheet();
+    let under = sheet();
+    picture.add_child(under);
+    picture.add_child(top);
     const message = hint('No pictures in this folder.');
     message.visible = false;
     const padded = new St.Bin({style_class: 'lg-tile', child: message, x_expand: true, y_expand: true});
@@ -145,8 +152,15 @@ function buildPhoto(ctx) {
             return;
         shown = path;
         const thumb = await loadThumb({slot: `photo-${ctx.id}`, source: path, width: ctx.width, height: ctx.height});
-        if (alive && shown === path && thumb)
-            picture.style = `background-image: url("file://${thumb}");`;
+        if (!alive || shown !== path || !thumb)
+            return;
+        [top, under] = [under, top];
+        top.style = `background-image: url("file://${thumb}");`;
+        picture.set_child_above_sibling(top, null);
+        if (livelyEnabled()) {
+            top.opacity = 0;
+            ease(top, {opacity: 255}, LAYOUT_MS);
+        }
     });
     return {
         actor: column({children: [picture, padded]}),
@@ -160,12 +174,12 @@ export const photo = buildPhoto;
 
 function buildProcesses(ctx) {
     const byMemory = ctx.options.by === 'memory';
-    const count = ctx.size === 'large' ? 6 : 3;
+    const rows = ctx.size === 'large' ? 6 : 3;
     const head = row({children: [
         text('label', {tone: 'muted', expand: true, content: 'Top processes'}),
         text('label', {tone: 'muted', content: byMemory ? 'Memory' : 'CPU'}),
     ]});
-    const lines = Array.from({length: count}, () => {
+    const lines = Array.from({length: rows}, () => {
         const name = text('body', {expand: true});
         const value = text('body-strong');
         return {actor: row({children: [name, value]}), name, value};
@@ -173,11 +187,14 @@ function buildProcesses(ctx) {
     ctx.watch(`processes:${byMemory ? 'memory' : 'cpu'}`, processes => {
         lines.forEach((line, i) => {
             const process = processes[i];
-            line.name.text = process?.name ?? '';
-            line.value.text = process ? byMemory ? Format.bytes(process.memory) : Format.percent(process.cpu) : '';
+            // Another process in this place rolls in; its share counts.
+            roll(line.name, process?.name ?? '');
+            count(line.value, process ? byMemory ? Format.bytes(process.memory) : Format.percent(process.cpu) : '');
         });
     });
-    return {actor: column({gap: ctx.size === 'large' ? 'lg-column-wide' : 'lg-column', children: [head, ...lines.map(line => line.actor)]})};
+    const actor = column({gap: ctx.size === 'large' ? 'lg-column-wide' : 'lg-column', children: [head, ...lines.map(line => line.actor)]});
+    actor.replay = () => cascade(lines.map(line => line.actor));
+    return {actor};
 }
 
 export const processes = buildProcesses;

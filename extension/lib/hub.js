@@ -132,3 +132,10 @@ export function history(length) {
         return [...values];
     };
 }
+
+// Whether a full history is the one before it with one reading more: the
+// oldest gone, a new one at the end.
+export function movedOn(before, after) {
+    return before.length > 1 && after.length === before.length &&
+        before.slice(1).every((value, i) => value === after[i]);
+}

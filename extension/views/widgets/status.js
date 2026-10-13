@@ -2,8 +2,8 @@
 
 import * as Format from '../../lib/format.js';
 import {Meter} from '../meter.js';
-import {count} from '../motion.js';
-import {CENTER, column, gauge, hint, icon, iconButton, row} from '../parts.js';
+import {count, setNow} from '../motion.js';
+import {CENTER, column, gauge, hint, icon, iconButton, row, swap} from '../parts.js';
 import {Slider} from '../slider.js';
 import {Spark} from '../spark.js';
 import {setTone, text} from '../text.js';
@@ -26,6 +26,15 @@ function batterySentence(reading) {
     return reading.remaining ? `${Format.duration(reading.remaining)} left` : 'On battery';
 }
 
+// The wave runs the way the charge goes: on while it fills, back while it
+// drains, and it pulses when little is left.
+function batteryWave(wave, reading) {
+    const charging = reading.state === 'charging';
+    wave.setRunning(charging);
+    wave.setDirection(reading.state === 'discharging' ? -1 : 1);
+    wave.setUrgent(!charging && reading.percent <= VERY_LOW);
+}
+
 function buildBattery(ctx) {
     const name = text('label', {tone: 'muted', content: 'Battery'});
     const sentence = text(ctx.size === 'small' ? 'label' : 'body-strong', {tone: ctx.size === 'small' ? 'muted' : null});
@@ -38,6 +47,9 @@ function buildBattery(ctx) {
         actor = column({gap: 'lg-stack', children: [name, dial, sentence]});
         show = reading => {
             count(label, Format.percent(reading.percent));
+            // The calm look's ring has no ripple.
+            if (ring.wave)
+                batteryWave(ring.wave, reading);
             ring.set(reading.percent, batteryTone(reading));
         };
     } else {
@@ -48,18 +60,22 @@ function buildBattery(ctx) {
             const tone = batteryTone(reading);
             count(value, Format.percent(reading.percent));
             setTone(value, tone === 'primary' ? null : tone);
+            batteryWave(progress.wave, reading);
             progress.set(reading.percent, tone);
-            // The wave travels while the battery fills.
-            progress.setRunning(reading.state === 'charging');
         };
     }
 
+    let state = null;
     ctx.watch('battery', reading => {
         ctx.hide(!reading.present);
         if (!reading.present)
             return;
         sentence.text = batterySentence(reading);
         show(reading);
+        // Plugged in, or full at last.
+        if (state !== null && state !== reading.state && ['charging', 'full'].includes(reading.state))
+            ctx.cheer();
+        state = reading.state;
     });
     return {actor};
 }
@@ -86,8 +102,8 @@ function buildNetwork(ctx) {
         actor = row({gap: 'lg-row-wide', children: [rates, spark]});
     }
     ctx.watch('network', reading => {
-        down.value.text = Format.rate(reading.down);
-        up.value.text = Format.rate(reading.up);
+        count(down.value, Format.rate(reading.down));
+        count(up.value, Format.rate(reading.up));
         spark?.set(reading.history);
     });
     return {actor};
@@ -194,7 +210,8 @@ function levelWidget(key, read, onPress = null) {
         const name = text('label', {tone: 'muted', expand: true});
         const value = text(ctx.size === 'small' ? 'metric-l' : 'metric-s');
         const slider = new Slider({theme: ctx.theme, accent: ctx.accent, onChange: level => {
-            value.text = Format.percent(100 * level);
+            // Under the finger the number follows at once.
+            setNow(value, Format.percent(100 * level));
             ctx.act(key, `set:${level.toFixed(3)}`);
         }});
         const symbol = onPress
@@ -210,10 +227,10 @@ function levelWidget(key, read, onPress = null) {
                 return;
             const reading = read(data);
             name.text = reading.name;
-            value.text = reading.dimmed ? 'Muted' : Format.percent(100 * reading.level);
+            count(value, reading.dimmed ? 'Muted' : Format.percent(100 * reading.level));
             slider.set(reading.level, reading.dimmed);
             if (onPress)
-                symbol.child.icon_name = reading.icon;
+                swap(symbol, reading.icon);
         });
         return {actor};
     };

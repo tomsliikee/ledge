@@ -67,6 +67,14 @@ export function iconButton(name, onClick, {kind = null, small = false, label = '
     return button;
 }
 
+// Changes the symbol on a button, which swells as it does.
+export function swap(button, name) {
+    if (button.child.icon_name === name)
+        return;
+    button.child.icon_name = name;
+    pop(button.child);
+}
+
 // A ring with its value written inside.
 export function gauge({size, stroke, theme, role, accent = 'primary', wavy = false}) {
     const ring = new Ring({size, stroke, theme, accent, wavy});

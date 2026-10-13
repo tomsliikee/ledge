@@ -50,6 +50,11 @@ test('a reading of another kind is counted up from nothing', () => {
     equal(countBetween('40 %', 'Muted', 0.5), 'Muted');
 });
 
+test('a rate counts within its unit and from nothing into another', () => {
+    equal(countBetween('1.0 MB/s', '3.0 MB/s', 0.5), '2.0 MB/s');
+    equal(countBetween('980 KB/s', '1.2 MB/s', 0.5), '0.6 MB/s');
+});
+
 test('a time is not taken for a number to count', () => {
     equal(countBetween('12:30', '12:31', 0.5), '12:31');
 });

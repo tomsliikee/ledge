@@ -98,8 +98,8 @@ export class Manager {
         this._connect(global.window_manager, 'minimize', () => this._queueRecount());
         this._connect(global.window_manager, 'switch-workspace', () => this._queueRecount());
 
-        // Widgets may be set to step aside on battery, and nothing moves
-        // on its own there.
+        // Widgets may be set to step aside on battery, and only the waves
+        // that show a value keep moving there.
         this._stopPower = power.listen(() => {
             this._setMotion();
             this._sync();
@@ -191,7 +191,7 @@ export class Manager {
         setMotion({
             enabled: this._store.animations,
             lively: this._store.livelyMotion,
-            // What moves without a reason is not worth the battery.
+            // What moves without showing anything is not worth the battery.
             ambient: this._store.ambientMotion && !this._power.onBattery,
         });
     }

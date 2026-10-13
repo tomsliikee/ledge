@@ -92,9 +92,9 @@ export default async function ({manager, store, shot, sleep, note, move, press, 
     };
     await click(buttons[0]);
     const wave = tile('timer')._marks.find(mark => mark.constructor.name === 'WavyProgress');
-    const phase = wave._phase;
+    const phase = wave.wave.phase;
     await sleep(700);
-    note(`timer running: frames [${moving()}], wave moved by ${((wave._phase - phase + 1) % 1).toFixed(3)} of a wavelength`);
+    note(`timer running: frames [${moving()}], wave moved by ${((wave.wave.phase - phase + 1) % 1).toFixed(3)} of a wavelength`);
     await shot('motion-timer-running');
     await click(buttons[0]);
     note(`timer paused: frames [${moving()}]`);
